@@ -1,0 +1,3 @@
+HOST_ADDR = ('localhost', 8081)
+SUNFIRE_USERNAME = ""
+SUNFIRE_PASSWORD = ""
