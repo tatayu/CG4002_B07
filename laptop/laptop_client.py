@@ -18,15 +18,15 @@ class Client():
 
 		tunnel2 = sshtunnel.open_tunnel(
 			ssh_address_or_host=(
-                'localhost', tunnel1.local_bind_port),
-            remote_bind_address=('127.0.0.1', 8081),
-            ssh_username='xilinx',
-            ssh_password='xilinx',
-            local_bind_address=('127.0.0.1', 8081),
-            block_on_close=False
+			'localhost', tunnel1.local_bind_port),
+			remote_bind_address=('127.0.0.1', 8081),
+			ssh_username='xilinx',
+			ssh_password='xilinx',
+			local_bind_address=('127.0.0.1', 8081),
+			block_on_close=False
 		)
 		tunnel2.start()
-        print('[Tunnel Opened] Xilinx tunnel opened')
+		print('[Tunnel Opened] Xilinx tunnel opened')
 
 	def run(self):
 		self.start_tunnel(SUNFIRE_USERNAME, SUNFIRE_PASSWORD)
