@@ -1,9 +1,17 @@
 from config import *
 import sshtunnel
+import socket
+import threading
 
 class Client():
 	def __init__(self, ip_addr):
 		self.ip_addr = ip_addr
+
+		self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.one_way_trip_delay = 0
+		self.server_offset = 0
+
+		self.is_start = threading.Event()
 
 	def start_tunnel(self, user, password):
 		tunnel1 = sshtunnel.open_tunnel(
@@ -37,8 +45,7 @@ class Client():
                 self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.client.settimeout(1)
                 self.client.connect(self.ip_addr)
-                print(f"[ULTRA96 CONNECTED] You are connected to Ultra96")
-                self.procedure()
+                print("[ULTRA96 CONNECTED] You are connected to Ultra96")
                 time.sleep(1)
             except ConnectionRefusedError:
                 self.is_start.clear()
