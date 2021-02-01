@@ -4,8 +4,8 @@ import socket
 import threading
 
 class Client():
-	def __init__(self, ip_addr):
-		self.ip_addr = ip_addr
+	def __init__(self, ip_address):
+		self.ip_address = ip_address
 
 		self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.one_way_trip_delay = 0
@@ -13,16 +13,16 @@ class Client():
 
 		self.is_start = threading.Event()
 
-	def start_tunnel(self, user, password):
+	def start_tunnel(self, user, password, target):
 		tunnel1 = sshtunnel.open_tunnel(
 			('sunfire.comp.nus.edu.sg', 22),
-			remote_bind_address=('137.132.86.230', 22),
+			remote_bind_address=target,
 			ssh_username=user,
 			ssh_password=password,
 			block_on_close=False
 		)
 		tunnel1.start()
-		print('[Tunnel Opened] Sunfire tunnel opened' + str(tunnel1.local_bind_port))
+		print('[Tunnel Opened] Sunfire tunnel opened: ' + str(tunnel1.local_bind_port))
 
 		tunnel2 = sshtunnel.open_tunnel(
 			ssh_address_or_host=(
@@ -36,24 +36,22 @@ class Client():
 		tunnel2.start()
 		print('[Tunnel Opened] Xilinx tunnel opened')
 
+	def start_up(self):
+		print('In start_up function!')
+
 	def run(self):
-		self.start_tunnel(SUNFIRE_USERNAME, SUNFIRE_PASSWORD)
+		self.start_tunnel(SUNFIRE_USERNAME, SUNFIRE_PASSWORD, TARGET_ADDRESS)
 		
-		# Continuously connect to the Ultra96
-        while True:
-            try:
-                self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.client.settimeout(1)
-                self.client.connect(self.ip_addr)
-                print("[ULTRA96 CONNECTED] You are connected to Ultra96")
-                time.sleep(1)
-            except ConnectionRefusedError:
-                self.is_start.clear()
-                time.sleep(1)
-                print("[TRYING] Connection refused!")
-            except Exception as e:
-                pass
+		try:
+			self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			self.client.settimeout(1)
+			self.client.connect(self.ip_address)
+			print("[ULTRA96 CONNECTED] You are connected to Ultra96")
+			self.start_up()
+			time.sleep(1)
+		except Exception as e:
+			pass
                 
 if __name__ == '__main__':
-    dancer_client = Client(HOST_ADDR)
+    dancer_client = Client(HOST_ADDRESS)
     dancer_client.run()
