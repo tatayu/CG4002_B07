@@ -36,8 +36,17 @@ class Client():
 		tunnel2.start()
 		print('[Tunnel Opened] Xilinx tunnel opened')
 
+	def encrypt(self, msg):
+		#encrypt
+
+	def send_msg(self, msg):
+		encrypted = self.encrypt(msg)
+		self.client.send_all(encrypted)
+
 	def start_up(self):
 		print('In start_up function!')
+		msg = "Start dancing!"
+		send_msg(str(msg).encode())
 
 	def run(self):
 		self.start_tunnel(SUNFIRE_USERNAME, SUNFIRE_PASSWORD, TARGET_ADDRESS)
