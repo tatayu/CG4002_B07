@@ -1,5 +1,5 @@
 EVAL_ADDRESS = ("localhost", 8083)
-ULTRA_ADDRESS = ("localhost", 8081)
+ULTRA_ADDRESS = ("localhost", 8082)
 
 SECRET_KEY = "0000000000000000"
 
