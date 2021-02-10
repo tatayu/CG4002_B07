@@ -56,7 +56,6 @@ def main():
 	position = [1, 2, 3]
 	actions = ['gun', 'sidepump', 'hair']
 	sync = [1.23, 2.13, 3.12]
-	time.sleep(65)
 
 	while True:
 		random.shuffle(actions)
@@ -64,7 +63,7 @@ def main():
 		random.shuffle(sync)
 
 		client.send_prediction(pos[0], pos[1], pos[2], moves[0], sync_delays[0])
-		time.sleep(5)
+		time.sleep(10)
 
 if __name__ == '__main__':
 	main()

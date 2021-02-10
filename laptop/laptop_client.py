@@ -11,8 +11,6 @@ class Client():
 		self.one_way_trip_delay = 0
 		self.server_offset = 0
 
-		self.is_start = threading.Event()
-
 	def start_tunnel(self, user, password, dest):
 		tunnel1 = sshtunnel.open_tunnel(
 			('sunfire.comp.nus.edu.sg', 22),
@@ -59,10 +57,20 @@ class Client():
 		encrypted = self.encrypt_msg(msg)
 		self.client.send_all(encrypted)
 
+	def poll_for_start(self):
+		while True:
+			try:
+				data = self.client.recv()
+				msg = self.decrypt_msg(data)
+				if ("[S]" in msg):
+					break
+			except Exception as e:
+				print(e)
+
 	def start_up(self):
-		print('In start_up function!')
-		msg = "Start dancing!"
-		send_msg(msg)
+		self.poll_for_start()
+
+		#start the thread
 
 	def run(self):
 		self.start_tunnel(SUNFIRE_USERNAME, SUNFIRE_PASSWORD, ULTRA_ADDRESS)
