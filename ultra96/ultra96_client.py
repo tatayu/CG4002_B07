@@ -3,6 +3,7 @@ import socket
 import threading
 import base64
 import random
+import time
 from Crypto.Cipher import AES
 from Crypto import Random
 
@@ -22,7 +23,7 @@ class Client(threading.Thread):
 		msg += ' ' * (16 - (len(msg) % 16))
 		iv = Random.new().read(AES.block_size)
 		cipher = AES.new(str(secret_key).encode(), AES.MODE_CBC, iv)
-		encoded = base64.b64encode(iv + cipher.encrypt(msg.encode()))
+		encoded = base64.b64encode(iv + cipher.encrypt(msg.encode("utf8")))
 		return encoded
 
 	def recv_msg(self):
@@ -38,7 +39,8 @@ class Client(threading.Thread):
 
 	def send_prediction(self, p1, p2, p3, action, sync):
 		prediction = f"#{p1} {p2} {p3}|{action}|{sync}"
-		self.sendmsg(prediction)
+		print(f"[SENDING] {prediction}")
+		self.send_msg(prediction)
 
 	def close(self):
 		self.client.close()
@@ -46,24 +48,30 @@ class Client(threading.Thread):
 
 	def run(self):
 		self.client.connect(EVAL_ADDRESS)
-		thread =threading.Thread(target=self.recv_msg())
+		thread = threading.Thread(target=self.recv_msg)
+		thread.daemon = True
 		thread.start()
 
 def main():
 	client = Client()
 	client.run()
 
+	time.sleep(65)
+
 	position = [1, 2, 3]
-	actions = ['gun', 'sidepump', 'hair']
+	actions = ["gun", "sidepump", "hair"]
 	sync = [1.23, 2.13, 3.12]
 
-	while True:
+	for x in range(len(actions)):
 		random.shuffle(actions)
 		random.shuffle(position)
 		random.shuffle(sync)
 
-		client.send_prediction(pos[0], pos[1], pos[2], moves[0], sync_delays[0])
-		time.sleep(10)
+		client.send_prediction(position[0], position[1], position[2], actions[0], sync[0])
+		time.sleep(5)
+
+	client.send_prediction(position[0], position[1], position[2], 'logout', sync[0])
+	quit()
 
 if __name__ == '__main__':
 	main()
