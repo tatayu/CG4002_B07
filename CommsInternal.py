@@ -1,4 +1,5 @@
 from bluepy import btle
+from bluepy.btle import BTLEException
 import struct
 import time
 
@@ -20,7 +21,7 @@ class Delegate(btle.DefaultDelegate):
                 receivedData += data[0:data.index(b'}')+1]
                 unpackedData = struct.unpack('<c6Hc', receivedData)
                 receivedPacket += 1
-                #print(unpackedData)
+                print(receivedPacket)
                 receivedData = bytes() #reset
                 receivedData += data[data.index(b'}')+1:len(data)]
         
@@ -35,22 +36,49 @@ class Delegate(btle.DefaultDelegate):
 
 def handShake(beetle):
     charac= beetle.getCharacteristics(uuid = 'dfb1')[0]
-    charac.write(bytes('H', 'ISO-8859-1'), withResponse=False) #send handshake packet
+    charac.write(bytes('H'), withResponse=False) #send handshake packet
     beetle.waitForNotifications(2)
 
     if(handShakeFlag[BEETLEMAC1] == True): 
-        charac.write(bytes('A', 'ISO-8859-1'), withResponse=False)
+        charac.write(bytes('A'), withResponse=False)
+        
+def reconnect(beetle):
+    success = False
+    tryConnect = 0
+    while(tryConnect < 2 and success == False):
+        try:
+            print('Reconnecting...')
+            beetle.disconnect()
+            beetle.connect(BEETLEMAC1)
+            success = True
+
+        except BTLEException:
+            print('Failed to reconnect!')
+            tryConnect += 1
+    
+    if(success == True):
+        handShake(beetle)
+    
+    return success
 
 def getData(beetle):
     global receivedPacket
-    start = time.time()
+    #start = time.time()
     while(1):
-        beetle.waitForNotifications(2)
+        try:
+            beetle.waitForNotifications(2)
+        
+        except BTLEException:
+            print('Device disconneted!')
+            reconnect(beetle)
+
+        '''
         end = time.time()
         if(end-start > 10):
             print(end-start)
             print(receivedPacket)
             break
+        '''
 
 def initSetup():
     beetle = btle.Peripheral(BEETLEMAC1)
