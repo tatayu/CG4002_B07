@@ -1,0 +1,6 @@
+venv
+__pycache__
+.ipynb_checkpoints
+./svm_model.pkl
+./knn_model.pkl
+test.py
