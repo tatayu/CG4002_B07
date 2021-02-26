@@ -4,6 +4,7 @@ from datetime import datetime
 import struct
 import time
 import threading
+from crccheck.crc import Crc16, CrcModbus
 
 BEETLEMAC1 = '80:30:DC:E9:1C:2F'
 BEETLEMAC2 = '80:30:DC:D9:1C:60'
@@ -21,12 +22,15 @@ class Delegate(btle.DefaultDelegate):
             handShakeFlag[self.BEETLEMAC]= True
 
         elif (b'}' in data): #detect the end of a packet
-            try:
+            try:   
                 receivedData += data[0:data.index(b'}')+1]
-                unpackedData = struct.unpack('<cI6Hc', receivedData)
+                unpackedData = struct.unpack('<6H', receivedData[0:len(receivedData)-3])
                 receivedPacket += 1
-                #print(unpackedData)
-                #print('receive:',receivedPacket)
+                beetleCrc = struct.unpack('<H', receivedData[(len(receivedData)-3):(len(receivedData)-1)])
+                pcCrc = CRC(beetleCrc, receivedData)
+                #print(beetleCrc)
+
+                #if(pcCrc == beetleCrc):
                 dataBuffer[self.BEETLEMAC] = unpackedData
                 print(self.BEETLEMAC, dataBuffer[self.BEETLEMAC])
                 receivedData = bytes() #reset
@@ -52,7 +56,14 @@ class beetleThread (threading.Thread):
         handShake(beetle, self.BEETLEMAC)
         getData(beetle, self.BEETLEMAC)
 
+def CRC(beetleCrc, receivedData):
+    crcCheck = CrcModbus()
+    crcCheck.process(receivedData[0:len(receivedData)-3])
+    
+    return crcCheck.final()
+
 def handShake(beetle, BEETLEMAC):
+    print('Handshaking...')
     charac= beetle.getCharacteristics(uuid = 'dfb1')[0]
     charac.write(bytes('H', 'ISO 8859-1'), withResponse=False) #send handshake packet
     beetle.waitForNotifications(2)
@@ -125,9 +136,9 @@ if __name__ == '__main__':
     missPakcet = 0
     receivedPacket = 0
     receivedData = bytes()
-    thread1 = beetleThread(1, BEETLEMAC1)
+    #thread1 = beetleThread(1, BEETLEMAC1)
     thread2 = beetleThread(2, BEETLEMAC2)
-    thread1.start()
+    #thread1.start()
     thread2.start()
     
     
