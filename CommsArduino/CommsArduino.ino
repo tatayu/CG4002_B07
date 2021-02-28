@@ -14,11 +14,15 @@ struct dataPacket {
 
 struct dataPacket IMUPacket;
 
+bool handshakeFlag = false;
+bool firstDataRequest = false;
+uint32_t baseTime = 0;
+
 void setup() {
   Serial.begin(115200);
   
   IMUPacket.beetleTime = 0;
-  IMUPacket.ac1 = 100;
+  IMUPacket.ac1 = 0;
   IMUPacket.ac2 = 200;
   IMUPacket.ac3 = 300;
   IMUPacket.gy1 = 400;
@@ -36,19 +40,30 @@ void loop() {
     {
       Serial.write('A');
     }
-    //start transmission of data
     else if (packet_type == 'A')
     {
+      handshakeFlag = true;
+    }
+    //start transmission of data
+    else if (packet_type == 'D' && handshakeFlag == true)
+    {
+      if(firstDataRequest == false)
+      {
+        firstDataRequest == true;
+        baseTime = millis();
+      }
+      
       uint32_t timePassed;
       while(1)
       {
         timePassed = millis();
-        IMUPacket.beetleTime = timePassed;
+        IMUPacket.beetleTime = timePassed - baseTime;
+        IMUPacket.ac1 += 1;
         Serial.write((const char *) &IMUPacket, sizeof(IMUPacket));
         uint16_t check = CRC16.modbus((uint8_t*)&IMUPacket, sizeof(IMUPacket));
         Serial.write((const char *) &check, sizeof(check));
         Serial.write('}');
-        delay(50);
+        delay(25);
       }
     }
   }
