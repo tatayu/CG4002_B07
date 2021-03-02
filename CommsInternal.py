@@ -8,7 +8,7 @@ import sys
 from crccheck.crc import Crc16, CrcModbus
 
 BEETLEMAC1 = '80:30:DC:E9:1C:2F'
-BEETLEMAC2 = '80:30:DC:E8:EF:FA'
+BEETLEMAC2 = '80:30:DC:D9:23:1E'
 BEETLEMAC3 = '34:B1:F7:D2:34:71'
 
 class Delegate(btle.DefaultDelegate):
@@ -32,14 +32,14 @@ class Delegate(btle.DefaultDelegate):
                 if(str(pcCrc) == str(beetleCrc)[1:len(str(beetleCrc))-2]):
                     timestamp = timeParse(self.BEETLEMAC, unpackedData)
 
-                    print(self.BEETLEMAC,timestamp)
-                    print("real time: ",getTime() )
+                    print(beetleName[self.BEETLEMAC], 'timestamp: ' ,timestamp)
                     dataBuffer[self.BEETLEMAC] = unpackedData[1:]
-                    print(self.BEETLEMAC, dataBuffer[self.BEETLEMAC])
+                    print(beetleName[self.BEETLEMAC], 'data: ', dataBuffer[self.BEETLEMAC])
                     receivedPacket[self.BEETLEMAC] += 1
                 else:
-                    print('CRC Failed!')
+                    print(beetleName[self.BEETLEMAC], 'CRC Failed!')
                     missedPacket[self.BEETLEMAC] += 1
+                    print(beetleName[self.BEETLEMAC], 'misspacket: ', missedPacket[self.BEETLEMAC])
 
                 #reset
                 receivedData[self.BEETLEMAC] = bytes() 
@@ -47,7 +47,7 @@ class Delegate(btle.DefaultDelegate):
         
             except Exception as e:
                 missedPacket[self.BEETLEMAC] += 1
-                print(missedPacket[self.BEETLEMAC])
+                print(beetleName[self.BEETLEMAC], 'misspacket: ', missedPacket[self.BEETLEMAC])
                 receivedData[self.BEETLEMAC] = bytes()
                 receivedData[self.BEETLEMAC] += data[data.index(b'}')+1:len(data)]
 
@@ -87,17 +87,17 @@ def CRC(beetleCrc, receivedData, BEETLEMAC):
 
 def handShake(BEETLEMAC):
     try:
-        print('Handshaking with ', BEETLEMAC, '...')
+        print('Handshaking with ', beetleName[BEETLEMAC], '...')
         charac= beetleObject[BEETLEMAC].getCharacteristics(uuid = 'dfb1')[0]
         charac.write(bytes('H', 'ISO 8859-1'), withResponse=False) 
         beetleObject[BEETLEMAC].waitForNotifications(2)
 
         if(handShakeFlag[BEETLEMAC] == True): 
             charac.write(bytes('A', 'ISO 8859-1'), withResponse=False)
-            print('Handshake done with ', BEETLEMAC, '!')
+            print('Handshake done with ', beetleName[BEETLEMAC], '!')
     
     except BTLEException:
-        print('Handshake with ', BEETLEMAC,' failed!')
+        print('Handshake with ', beetleName[BEETLEMAC],' failed!')
         reconnect(BEETLEMAC)
 
 def reconnect(BEETLEMAC):
@@ -106,13 +106,13 @@ def reconnect(BEETLEMAC):
     reconnectFlag[BEETLEMAC] = False
     while(tryConnect < 2 and success == False):
         try:
-            print('Reconnecting...')
+            print('Reconnecting...', beetleName[BEETLEMAC])
             beetleObject[BEETLEMAC].disconnect()
             beetleObject[BEETLEMAC].connect(BEETLEMAC)
             success = True
 
         except BTLEException:
-            print('Failed to reconnect!')
+            print('Failed to reconnect!', beetleName[BEETLEMAC])
             tryConnect += 1
     
     if(success == True):
@@ -128,15 +128,15 @@ def getIMUData(BEETLEMAC):
  
     timestamp = getTime()
     startTimestamp[BEETLEMAC] = timestamp
-    print('Ready to start: ',timestamp)
+    print('Ready to start: ',beetleName[BEETLEMAC], timestamp)
 
     while(1):
         try:
             if(reconnectTimeFlag == True):
                 timestamp = getTime()
                 reconnectTimestamp[BEETLEMAC] = timestamp
-                print('Reconnect ready to start: ', timestamp)
-                reconnectTimeFlag == False
+                print('Reconnect ready to start: ', beetleName[BEETLEMAC], timestamp)
+                reconnectTimeFlag = False
             
             if not beetleObject[BEETLEMAC].waitForNotifications(2):
                 charac= beetleObject[BEETLEMAC].getCharacteristics(uuid = 'dfb1')[0]
@@ -148,7 +148,7 @@ def getIMUData(BEETLEMAC):
                     IMUDataRequest[BEETLEMAC] = 0 #reset
         
         except BTLEException:
-            print('Device disconneted!')
+            print('Device disconneted!', beetleName[BEETLEMAC])
             reconnect(BEETLEMAC)
             reconnectTimeFlag = True
 
@@ -171,12 +171,12 @@ def initSetup(BEETLEMAC):
             beetleObject[BEETLEMAC] = beetle
 
         else:
-            print('Failed to connect beetle ', BEETLEMAC)
+            print('Failed to connect beetle ', beetleName[BEETLEMAC])
             beetleIDList.remove(BEETLEMAC)
             return
      
     except BTLEException:
-            print('Initial setup fialed! Please disconnect the bluetooth for beetle ', BEETLEMAC, ' and try again!')
+            print('Initial setup fialed! Please disconnect the bluetooth for beetle ', beetleName[BEETLEMAC], ' and try again!')
             initSetupRetry[BEETLEMAC] += 1
             initSetup(BEETLEMAC)
 
@@ -184,6 +184,8 @@ def initSetup(BEETLEMAC):
 if __name__ == '__main__':
     beetleIDList = [BEETLEMAC1, BEETLEMAC2, BEETLEMAC3]
     beetleObject = {}
+
+    beetleName = {BEETLEMAC1: "beetle1", BEETLEMAC2: "beetle2", BEETLEMAC3: "beetle3"}
 
     #If initial setup is success, initSetupSuccess is set to true
     initSetupSuccess = {BEETLEMAC1: False, BEETLEMAC2: False, BEETLEMAC3: False}
