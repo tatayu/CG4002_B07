@@ -8,5 +8,7 @@
 ## Ultra96
 - ultra96_client.py
 - ultra96_server.py
+- ultra96_main.py
+- dummy_eval_server.py
 - config.py
 - requirements.txt
