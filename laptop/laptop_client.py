@@ -10,6 +10,9 @@ from Crypto import Random
 class Client():
 	def __init__(self):
 		self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.dancer_id = -999
+		self.clock_offset = 0
+		self.is_start = False
 
 	def start_tunnel(self, user, password, ultra_address):
 		tunnel1 = sshtunnel.open_tunnel(
@@ -56,6 +59,10 @@ class Client():
 		encrypted = self.encrypt_msg(msg)
 		self.client.sendall(encrypted)
 
+	def send_ready(self):
+		msg = f"[S]|{self.dancer_id}"
+		self.send_msg(msg)
+
 	def send_to_ultra96(self):
 		count = 1
 		while True:
@@ -64,28 +71,59 @@ class Client():
 			self.send_msg(msg)
 			time.sleep(5)
 
-
 	def poll_for_start(self):
+		while not self.is_start:
+			time.sleep(0.5)
+
+	def clock_sync(self):
+		t1 = int(round(time.time() * 1000))
+		msg = f"[C]|{t1}"
+		self.send_msg(msg)
+
+		data = self.client.recv(256)
+		t4 = int(round(time.time() * 1000))
+		msg = self.decrypt_msg(data)
+		split_msg = msg.split("|")
+		t2 = float(split_msg[2])
+		t3 = float(split_msg[3])
+
+		rtt = ((t4 - t1) - (t3 - t2))
+		#print(f"RTT: {rtt}")
+		self.clock_offset = ((t2 - t1) + (t3 - t4))/2
+
+		to_print = f"[CLOCK SYNC] Clock offset for Dancer {self.dancer_id}: {self.clock_offset}"
+		print(to_print)
+
+	def handle_ultra96_messages(self):
 		while True:
-			data = self.client.recv(1024)
-			if data:
-				try:
+			try:
+				data = self.client.recv(256)
+				if data:
 					msg = self.decrypt_msg(data)
-					if ("[S]" in msg):
+					msg = msg.strip()
+					if ("[SC]" in msg):
+						self.clock_sync()
+					elif ("[S]" in msg):
+						self.is_start = True
 						print("[START] Start dancing!")
-						break
-				except Exception as e:
-					print(e)
+						self.clock_sync()
+						break 
+			except Exception as e:
+				print(e)
+
 
 	def start_up(self):
-		self.poll_for_start()
+		self.send_ready()
 
-		thread =threading.Thread(target=self.send_to_ultra96)
+		thread = threading.Thread(target=self.handle_ultra96_messages)
 		thread.start()
+
+		self.poll_for_start()
 
 
 	def run(self):
 		self.start_tunnel(SUNFIRE_USERNAME, SUNFIRE_PASSWORD, ULTRA_ADDRESS)
+		self.dancer_id = input("Input Dancer ID: ")
 		
 		try:
 			self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

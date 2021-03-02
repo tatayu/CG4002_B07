@@ -139,7 +139,8 @@ class Server(threading.Thread):
         self.connection, client_address = self.socket.accept()
 
         print("Enter the secret key: ")
-        secret_key = sys.stdin.readline().strip()
+        #secret_key = sys.stdin.readline().strip()
+        secret_key = "0000000000000000"
 
         print('connection from', client_address)
         if len(secret_key) == 16 or len(secret_key) == 24 or len(secret_key) == 32:
