@@ -12,7 +12,7 @@ class Server(threading.Thread):
 		super(Server, self).__init__()
 
 		self.ultra96 = ultra96
-		self.num_laptops = 2
+		self.num_laptops = 3
 		self.connected_laptops = []
 		self.dancers = []
 
