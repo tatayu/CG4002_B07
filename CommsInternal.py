@@ -19,8 +19,9 @@ class Delegate(btle.DefaultDelegate):
     def handleNotification(self, cHandle, data):
         #receive handshake reply from beetle
         if(data == b'A'): 
+            print('receiving A from ', beetleName[BEETLEMAC2])
             handShakeFlag[self.BEETLEMAC]= True
-        
+            
         #detect the end of a packet
         elif (b'}' in data): 
             try:   
@@ -61,10 +62,13 @@ class beetleThread (threading.Thread):
         self.BEETLEMAC = BEETLEMAC
     
     def run(self):
-        getIMUData(self.BEETLEMAC)
+        if(handShakeSuccess[self.BEETLEMAC]):
+            getIMUData(self.BEETLEMAC)
+        else:
+            beetleIDList.remove(BEETLEMAC)
 
 def unpackPacket(receivedData, BEETLEMAC):
-    unpackedData = struct.unpack('<I6H', receivedData[BEETLEMAC][0:len(receivedData[BEETLEMAC])-3])            
+    unpackedData = struct.unpack('<I6h', receivedData[BEETLEMAC][0:len(receivedData[BEETLEMAC])-3])            
     beetleCrc = struct.unpack('<H', receivedData[BEETLEMAC][(len(receivedData[BEETLEMAC])-3):(len(receivedData[BEETLEMAC])-1)])
     return unpackedData, beetleCrc
 
@@ -86,16 +90,24 @@ def CRC(beetleCrc, receivedData, BEETLEMAC):
     return crcCheck.final()
 
 def handShake(BEETLEMAC):
+    try_num = 0
     try:
-        print('Handshaking with ', beetleName[BEETLEMAC], '...')
-        charac= beetleObject[BEETLEMAC].getCharacteristics(uuid = 'dfb1')[0]
-        charac.write(bytes('H', 'ISO 8859-1'), withResponse=False) 
-        beetleObject[BEETLEMAC].waitForNotifications(2)
+        while(try_num < 5):
+            print('Handshaking with ', beetleName[BEETLEMAC], '...')
+            charac= beetleObject[BEETLEMAC].getCharacteristics(uuid = 'dfb1')[0]
+            charac.write(bytes('H', 'ISO 8859-1'), withResponse=False) 
+            print('sending H to ', beetleName[BEETLEMAC2])
+            beetleObject[BEETLEMAC].waitForNotifications(2)
 
-        if(handShakeFlag[BEETLEMAC] == True): 
-            charac.write(bytes('A', 'ISO 8859-1'), withResponse=False)
-            print('Handshake done with ', beetleName[BEETLEMAC], '!')
-    
+            if(handShakeFlag[BEETLEMAC] == True): 
+                charac.write(bytes('A', 'ISO 8859-1'), withResponse=False)
+                print('sending A to ', beetleName[BEETLEMAC2])
+                handShakeSuccess[BEETLEMAC] = True
+                print('Handshake done with ', beetleName[BEETLEMAC], '!')
+                break
+            
+            try_num += 1
+
     except BTLEException:
         print('Handshake with ', beetleName[BEETLEMAC],' failed!')
         reconnect(BEETLEMAC)
@@ -125,7 +137,8 @@ def getIMUData(BEETLEMAC):
     reconnectTimeFlag = False
     charac= beetleObject[BEETLEMAC].getCharacteristics(uuid = 'dfb1')[0]
     charac.write(bytes('D', 'ISO 8859-1'), withResponse=False) 
- 
+    print('sending D to beetle ', beetleName[BEETLEMAC])
+    
     timestamp = getTime()
     startTimestamp[BEETLEMAC] = timestamp
     print('Ready to start: ',beetleName[BEETLEMAC], timestamp)
@@ -140,6 +153,7 @@ def getIMUData(BEETLEMAC):
             
             if not beetleObject[BEETLEMAC].waitForNotifications(2):
                 charac= beetleObject[BEETLEMAC].getCharacteristics(uuid = 'dfb1')[0]
+                print('sending D to beetle ', beetleName[BEETLEMAC])
                 charac.write(bytes('D', 'ISO 8859-1'), withResponse=False)
                 IMUDataRequest[BEETLEMAC] += 1
 
@@ -182,7 +196,7 @@ def initSetup(BEETLEMAC):
 
 
 if __name__ == '__main__':
-    beetleIDList = [BEETLEMAC1, BEETLEMAC2, BEETLEMAC3]
+    beetleIDList = [BEETLEMAC2]
     beetleObject = {}
 
     beetleName = {BEETLEMAC1: "beetle1", BEETLEMAC2: "beetle2", BEETLEMAC3: "beetle3"}
@@ -196,6 +210,9 @@ if __name__ == '__main__':
     #If receive reply from beetle, handShakeFlag is set to true
     handShakeFlag = {BEETLEMAC1: False, BEETLEMAC2: False, BEETLEMAC3: False}
     
+    #True if the handShake is success
+    handShakeSuccess = {BEETLEMAC1: False, BEETLEMAC2:False, BEETLEMAC3:False}
+
     #Number of times of request for data from beetle
     IMUDataRequest = {BEETLEMAC1: 0, BEETLEMAC2: 0, BEETLEMAC3: 0}
 
@@ -225,13 +242,13 @@ if __name__ == '__main__':
         if(initSetupSuccess[BEETLEMAC] == True):
             handShake(BEETLEMAC)
 
-    thread1 = beetleThread(1, BEETLEMAC1)
+    #thread1 = beetleThread(1, BEETLEMAC1)
     thread2 = beetleThread(2, BEETLEMAC2)
-    thread3 = beetleThread(3, BEETLEMAC3)
+    #thread3 = beetleThread(3, BEETLEMAC3)
 
-    thread1.start()
+    #thread1.start()
     thread2.start()
-    thread3.start()
+    #thread3.start()
     
     
 

@@ -4,12 +4,12 @@ FastCRC16 CRC16;
 
 struct dataPacket {
   uint32_t beetleTime;
-  uint16_t ac1;
-  uint16_t ac2;
-  uint16_t ac3;
-  uint16_t gy1;
-  uint16_t gy2;
-  uint16_t gy3;
+  int16_t ac1;
+  int16_t ac2;
+  int16_t ac3;
+  int16_t gy1;
+  int16_t gy2;
+  int16_t gy3;
 };
 
 struct dataPacket IMUPacket;
@@ -49,7 +49,7 @@ void loop() {
     {
       if(firstDataRequest == false)
       {
-        firstDataRequest == true;
+        firstDataRequest = true;
         baseTime = millis();
       }
       
