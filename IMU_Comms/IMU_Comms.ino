@@ -265,7 +265,7 @@ void loop() {
         
           //delay(25);
           nowTime = millis();
-          while(nowTime - preTime < 40)
+          while(nowTime - preTime < 25)
           {
             nowTime = millis();
             if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) {
