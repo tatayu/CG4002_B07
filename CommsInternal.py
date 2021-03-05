@@ -10,7 +10,7 @@ from crccheck.crc import Crc16, CrcModbus
 BEETLEMAC1 = '80:30:DC:E9:1C:2F'
 BEETLEMAC2 = '80:30:DC:D9:23:1E'
 BEETLEMAC3 = '34:B1:F7:D2:34:71'
-
+counter = 0
 class Delegate(btle.DefaultDelegate):
     def __init__(self, BEETLEMAC):
         btle.DefaultDelegate.__init__(self)
@@ -21,9 +21,12 @@ class Delegate(btle.DefaultDelegate):
         if(data == b'A'): 
             print('receiving A from ', beetleName[BEETLEMAC2])
             handShakeFlag[self.BEETLEMAC]= True
-            
+        
         #detect the end of a packet
         elif (b'}' in data): 
+            global counter
+            counter += 1
+            print(counter)
             try:   
                 receivedData[self.BEETLEMAC] += data[0:data.index(b'}')+1]
                 unpackedData, beetleCrc = unpackPacket(receivedData, self.BEETLEMAC) 
@@ -68,7 +71,7 @@ class beetleThread (threading.Thread):
             beetleIDList.remove(BEETLEMAC)
 
 def unpackPacket(receivedData, BEETLEMAC):
-    unpackedData = struct.unpack('<I6h', receivedData[BEETLEMAC][0:len(receivedData[BEETLEMAC])-3])            
+    unpackedData = struct.unpack('<I?6h', receivedData[BEETLEMAC][0:len(receivedData[BEETLEMAC])-3])            
     beetleCrc = struct.unpack('<H', receivedData[BEETLEMAC][(len(receivedData[BEETLEMAC])-3):(len(receivedData[BEETLEMAC])-1)])
     return unpackedData, beetleCrc
 
