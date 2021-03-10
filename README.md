@@ -2,6 +2,7 @@
 
 ## Laptop
 - laptop_client.py
+- laptop_main.py
 - config.py
 - requirements.txt
 

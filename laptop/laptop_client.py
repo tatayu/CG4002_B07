@@ -7,9 +7,10 @@ import time
 from Crypto.Cipher import AES
 from Crypto import Random
 
-class Client():
-	def __init__(self):
+class Client(threading.Thread):
+	def __init__(self, laptop):
 		self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.laptop = laptop
 		self.dancer_id = -999
 		self.clock_offset = 0
 		self.is_start = False
@@ -63,17 +64,23 @@ class Client():
 		msg = f"[S]|{self.dancer_id}"
 		self.send_msg(msg)
 
-	def send_to_ultra96(self):
-		count = 1
+	def send_data(self):
+		print("In send_data thread!")
 		while True:
-			msg = f"[{count}]: This is a message!"
-			count += 1
-			self.send_msg(msg)
-			time.sleep(5)
+			if not (self.laptop.data_queue.empty()):
+				data = self.laptop.data_queue.get()
+
+				data = data.replace(" ", "|")
+				msg = f"[D]|{data}"
+				print("Sending data!")
+				self.send_msg(msg)
 
 	def poll_for_start(self):
 		while not self.is_start:
 			time.sleep(0.5)
+
+		data_thread = threading.Thread(target=self.send_data)
+		data_thread.start()
 
 	def clock_sync(self):
 		t1 = int(round(time.time() * 1000))
@@ -107,7 +114,6 @@ class Client():
 						self.is_start = True
 						print("[START] Start dancing!")
 						self.clock_sync()
-						break 
 			except Exception as e:
 				print(e)
 
@@ -122,7 +128,7 @@ class Client():
 
 
 	def run(self):
-		self.start_tunnel(SUNFIRE_USERNAME, SUNFIRE_PASSWORD, ULTRA_ADDRESS)
+		#self.start_tunnel(SUNFIRE_USERNAME, SUNFIRE_PASSWORD, ULTRA_ADDRESS)
 		self.dancer_id = input("Input Dancer ID: ")
 		
 		try:
@@ -135,5 +141,6 @@ class Client():
 			print(e)
                 
 if __name__ == '__main__':
-    dancer_client = Client()
-    dancer_client.run()
+	pass
+	dancer_client = Client()
+	dancer_client.run()

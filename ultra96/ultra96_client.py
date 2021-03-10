@@ -46,7 +46,6 @@ class Client(threading.Thread):
 
 	def close(self):
 		self.client.close()
-		self.shutdown.set()
 
 	def run(self):
 		self.client.connect(EVAL_ADDRESS)
@@ -72,7 +71,6 @@ class Client(threading.Thread):
 			time.sleep(5)
 
 		self.send_prediction(position[0], position[1], position[2], 'logout', sync[0])
-		quit()
 
 def main():
 	pass

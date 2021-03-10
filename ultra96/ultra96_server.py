@@ -12,7 +12,7 @@ class Server(threading.Thread):
 		super(Server, self).__init__()
 
 		self.ultra96 = ultra96
-		self.num_laptops = 3
+		self.num_laptops = 1
 		self.connected_laptops = []
 		self.dancers = []
 
@@ -68,6 +68,11 @@ class Server(threading.Thread):
 					split_msg = msg.split("|")
 					dancer_id = split_msg[1]
 					self.ultra96.init_dancer(dancer_id)
+				elif ("[D]" in msg):
+					split_msg = msg.split("|")
+					to_print = f"[DATA] Passing data from {dancer_id}: {msg}"
+					print(to_print)
+					self.ultra96.pass_dance_data(dancer_id, split_msg[2:])
 
 
 

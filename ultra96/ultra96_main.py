@@ -5,15 +5,20 @@ import socket
 import threading
 import base64
 import random
+import queue
 from Crypto.Cipher import AES
 from Crypto import Random
 
 class Ultra96Main(threading.Thread):
 	def __init__(self):
 		super(Ultra96Main, self).__init__()
+
+		self.msg_queue = queue.Queue()
+		#self.ml = MLStub()
 		self.server = Server(ultra96=self)
 		self.client = Client(ultra96=self)
 		self.all_connected = threading.Event()
+		#self.lock = threading.Lock()
 
 		self.dance_data = {}
 		self.dancer_positions = [1, 2, 3]
@@ -28,7 +33,7 @@ class Ultra96Main(threading.Thread):
 		self.client.run()
 
 	def init_dancer(self, dancer_id):
-		self.dance_data[dancer_id] = []
+		self.dance_data[dancer_id] = queue.Queue()
 		print("[INIT] Initialised dancer! Dancer ID: {}".format(dancer_id))
 
 	def set_dancer_positions(self, msg):
@@ -36,6 +41,27 @@ class Ultra96Main(threading.Thread):
 		self.dancer_positions[0], self.dancer_positions[1], self.dancer_positions[2] = split_msg[:3]
 		to_print = f"[POS] New Dancer Positions: {self.dancer_positions[0]}|{self.dancer_positions[1]}|{self.dancer_positions[2]}"
 		print(to_print)
+
+	def pass_dance_data(self, dancer_id, data):
+		#with self.lock:
+		self.dance_data[dancer_id].put(data)
+		self.predict_move()
+
+	def predict_move(self):
+		#placeholder dance move
+		action = "gun"
+		dancer_id = 1
+
+		try:
+			data = self.dance_data[dancer_id].get()
+		except Exception as e:
+			raise e
+
+		#self.ml.predict(self.dance_data[dancer_id].get())
+
+		#placeholder sync delay for week 9 test
+		sync = 1.23
+		self.client.send_prediction(self.dancer_positions[0], self.dancer_positions[1], self.dancer_positions[2], action, sync)
 
 def main():
 	ultra96Main = Ultra96Main()
