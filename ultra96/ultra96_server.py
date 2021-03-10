@@ -72,7 +72,7 @@ class Server(threading.Thread):
 					split_msg = msg.split("|")
 					to_print = f"[DATA] Passing data from {dancer_id}: {msg}"
 					print(to_print)
-					self.ultra96.pass_dance_data(dancer_id, split_msg[2:])
+					self.ultra96.pass_dance_data(dancer_id, split_msg[1:])
 
 
 

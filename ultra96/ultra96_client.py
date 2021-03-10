@@ -53,7 +53,7 @@ class Client(threading.Thread):
 		thread.daemon = True
 		thread.start()
 
-		self.dummy_data()
+		#self.dummy_data()
 
 	def dummy_data(self):
 		time.sleep(65)

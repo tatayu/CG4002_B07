@@ -8,6 +8,7 @@ class IntCommsStub(threading.Thread):
 		self.laptop = laptop
 
 	def run(self):
+		time.sleep(65)
 		while(True):
 			data = "123 43 903724 23424"
 

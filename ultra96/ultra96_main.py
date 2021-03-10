@@ -1,4 +1,5 @@
 from config import *
+from ml_stub import MLStub
 from ultra96_server import Server
 from ultra96_client import Client
 import socket
@@ -14,7 +15,7 @@ class Ultra96Main(threading.Thread):
 		super(Ultra96Main, self).__init__()
 
 		self.msg_queue = queue.Queue()
-		#self.ml = MLStub()
+		self.ml = MLStub(ultra96=self)
 		self.server = Server(ultra96=self)
 		self.client = Client(ultra96=self)
 		self.all_connected = threading.Event()
@@ -48,20 +49,10 @@ class Ultra96Main(threading.Thread):
 		self.predict_move()
 
 	def predict_move(self):
-		#placeholder dance move
-		action = "gun"
-		dancer_id = 1
+		for dancer_id in self.dance_data.keys():
+			p0, p1, p2, action, sync = self.ml.output_move(self.dance_data[dancer_id].get())
 
-		try:
-			data = self.dance_data[dancer_id].get()
-		except Exception as e:
-			raise e
-
-		#self.ml.predict(self.dance_data[dancer_id].get())
-
-		#placeholder sync delay for week 9 test
-		sync = 1.23
-		self.client.send_prediction(self.dancer_positions[0], self.dancer_positions[1], self.dancer_positions[2], action, sync)
+		self.client.send_prediction(p0, p1, p2, action, sync)
 
 def main():
 	ultra96Main = Ultra96Main()

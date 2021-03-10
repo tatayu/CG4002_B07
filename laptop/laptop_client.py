@@ -65,14 +65,12 @@ class Client(threading.Thread):
 		self.send_msg(msg)
 
 	def send_data(self):
-		print("In send_data thread!")
 		while True:
 			if not (self.laptop.data_queue.empty()):
 				data = self.laptop.data_queue.get()
 
 				data = data.replace(" ", "|")
 				msg = f"[D]|{data}"
-				print("Sending data!")
 				self.send_msg(msg)
 
 	def poll_for_start(self):
