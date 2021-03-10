@@ -57,12 +57,16 @@ THE SOFTWARE.
     #include "Wire.h"
 #endif
 
+#include<WiFi.h>
+
 // class default I2C address is 0x68
 // specific I2C addresses may be passed as a parameter here
 // AD0 low = 0x68 (default for SparkFun breakout and InvenSense evaluation board)
 // AD0 high = 0x69
 MPU6050 mpu;
 //MPU6050 mpu(0x69); // <-- use for AD0 high
+
+byte mac[6];
 
 /* =========================================================================
    NOTE: In addition to connection 3.3v, GND, SDA, and SCL, this sketch
@@ -149,7 +153,7 @@ float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gra
 // packet structure for InvenSense teapot demo
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
 
-
+String macAdd;
 
 // ================================================================
 // ===               INTERRUPT DETECTION ROUTINE                ===
@@ -205,13 +209,63 @@ void setup() {
     // load and configure the DMP
     Serial.println(F("Initializing DMP..."));
     devStatus = mpu.dmpInitialize();
-
+    
+    
+    int bluno = 5;
     // supply your own gyro offsets here, scaled for min sensitivity
-    mpu.setXGyroOffset(220);
-    mpu.setYGyroOffset(76);
-    mpu.setZGyroOffset(-85);
-    mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
+    
+    if(bluno == 1)
+    {
+      mpu.setXGyroOffset(156);
+      mpu.setYGyroOffset(-34);
+      mpu.setZGyroOffset(56);
+      mpu.setZAccelOffset(989); // 1688 factory default for my test chip
+    }
 
+    else if(bluno == 2)
+    {
+      mpu.setXGyroOffset(259);
+      mpu.setYGyroOffset(-97);
+      mpu.setZGyroOffset(19);
+      mpu.setZAccelOffset(3578);
+    }
+     else if(bluno == 3)
+    {
+      mpu.setXGyroOffset(240);
+      mpu.setYGyroOffset(-70);
+      mpu.setZGyroOffset(15);
+      mpu.setZAccelOffset(2472);
+    }
+    else if(bluno == 4)
+    {
+      mpu.setXGyroOffset(75);
+      mpu.setYGyroOffset(-41);
+      mpu.setZGyroOffset(-27);
+      mpu.setZAccelOffset(3840);
+    }
+    else if(bluno == 5)
+    {
+      mpu.setXGyroOffset(71);
+      mpu.setYGyroOffset(53);
+      mpu.setZGyroOffset(-7);
+      mpu.setZAccelOffset(3308);
+    }
+    else if(bluno == 6)
+    {
+      mpu.setXGyroOffset(169);
+      mpu.setYGyroOffset(-67);
+      mpu.setZGyroOffset(30);
+      mpu.setZAccelOffset(2076);
+    }
+    else if(bluno == 7)
+    {
+      mpu.setXGyroOffset(259);
+      mpu.setYGyroOffset(-97);
+      mpu.setZGyroOffset(19);
+      mpu.setZAccelOffset(3578);
+    }
+    
+      
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
         // Calibration Time: generate offsets and calibrate our MPU6050
@@ -286,37 +340,6 @@ void loop() {
             Serial.print("\t");
             Serial.println(gg.z);
         #endif 
-
-
-//        #ifdef OUTPUT_READABLE_REALACCEL
-//            // display real acceleration, adjusted to remove gravity
-//            mpu.dmpGetQuaternion(&q, fifoBuffer);
-//            mpu.dmpGetAccel(&aa, fifoBuffer);
-//            mpu.dmpGetGravity(&gravity, &q);
-//            mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-//            Serial.print("areal\t");
-//            Serial.print(aaReal.x);
-//            Serial.print("\t");
-//            Serial.print(aaReal.y);
-//            Serial.print("\t");
-//            Serial.println(aaReal.z);
-//        #endif
-//
-//        #ifdef OUTPUT_READABLE_WORLDACCEL
-//            // display initial world-frame acceleration, adjusted to remove gravity
-//            // and rotated based on known orientation from quaternion
-//            mpu.dmpGetQuaternion(&q, fifoBuffer);
-//            mpu.dmpGetAccel(&aa, fifoBuffer);
-//            mpu.dmpGetGravity(&gravity, &q);
-//            mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-//            mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-//            Serial.print("aworld\t");
-//            Serial.print(aaWorld.x);
-//            Serial.print("\t");
-//            Serial.print(aaWorld.y);
-//            Serial.print("\t");
-//            Serial.println(aaWorld.z);
-//        #endif
         
         #ifdef OUTPUT_ACCEL_GRAVITY
             // display acceleration with gravity included
