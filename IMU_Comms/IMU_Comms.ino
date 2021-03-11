@@ -144,7 +144,7 @@ uint32_t nowTime = 0;
 // ================================================================
 // ===                      INITIAL SETUP                       ===
 // ================================================================
-bool isMoving = true;
+bool isMoving = false;
 bool changePosition = false;
 bool isDancing = false;
 
@@ -177,11 +177,58 @@ void setup() {
 
     devStatus = mpu.dmpInitialize();
 
+    int bluno = 2;
     // set offsets
-    mpu.setXGyroOffset(220);
-    mpu.setYGyroOffset(76);
-    mpu.setZGyroOffset(-85);
-    mpu.setZAccelOffset(1788);
+    if(bluno == 1)
+    {
+      mpu.setXGyroOffset(156);
+      mpu.setYGyroOffset(-34);
+      mpu.setZGyroOffset(56);
+      mpu.setZAccelOffset(989); // 1688 factory default for my test chip
+    }
+
+    else if(bluno == 2)
+    {
+      mpu.setXGyroOffset(259);
+      mpu.setYGyroOffset(-97);
+      mpu.setZGyroOffset(19);
+      mpu.setZAccelOffset(3578);
+    }
+     else if(bluno == 3)
+    {
+      mpu.setXGyroOffset(240);
+      mpu.setYGyroOffset(-70);
+      mpu.setZGyroOffset(15);
+      mpu.setZAccelOffset(2472);
+    }
+    else if(bluno == 4)
+    {
+      mpu.setXGyroOffset(75);
+      mpu.setYGyroOffset(-41);
+      mpu.setZGyroOffset(-27);
+      mpu.setZAccelOffset(3840);
+    }
+    else if(bluno == 5)
+    {
+      mpu.setXGyroOffset(71);
+      mpu.setYGyroOffset(53);
+      mpu.setZGyroOffset(-7);
+      mpu.setZAccelOffset(3308);
+    }
+    else if(bluno == 6)
+    {
+      mpu.setXGyroOffset(169);
+      mpu.setYGyroOffset(-67);
+      mpu.setZGyroOffset(30);
+      mpu.setZAccelOffset(2076);
+    }
+    else if(bluno == 7)
+    {
+      mpu.setXGyroOffset(259);
+      mpu.setYGyroOffset(-97);
+      mpu.setZGyroOffset(19);
+      mpu.setZAccelOffset(3578);
+    }
 
     if (devStatus == 0) 
     {
@@ -271,54 +318,23 @@ void loop() {
             if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) {
               
               mpu.dmpGetAccel(&aaGravity, fifoBuffer);
-              if(counter == 0) 
-              {
-                aaXPrevious = aaGravity.x;
-                aaYPrevious = aaGravity.y;
-                aaZPrevious = aaGravity.z;
-      
-                counter++;
+        
+              aaXDiff = abs(aaGravity.x - aaXPrevious);
+              aaXPrevious = aaGravity.x;
+              
+              aaYDiff = abs(aaGravity.y - aaYPrevious);
+              aaYPrevious = aaGravity.y;
+              
+              aaZDiff = abs(aaGravity.z - aaZPrevious);
+              aaZPrevious = aaGravity.z;
+              
+
+              if(aaXDiff > 400 && aaYDiff > 400 && aaZDiff > 400) {          
+                isMoving = true;
+                IMUPacket.startFlag = isMoving;
               } 
-              else if(counter > 0 && counter < sampleFrequency)
-              {
-                aaXDiff = abs(aaGravity.x - aaXPrevious);
-                aaXPrevious = aaGravity.x;
-                
-                aaYDiff = abs(aaGravity.y - aaYPrevious);
-                aaYPrevious = aaGravity.y;
-                
-                aaZDiff = abs(aaGravity.z - aaZPrevious);
-                aaZPrevious = aaGravity.z;
-                
-                aaXTotal += aaXDiff;
-                aaYTotal += aaYDiff;
-                aaZTotal += aaZDiff;
-      
-                counter++;
-              } 
-              else if(counter == sampleFrequency) 
-              {
-                if(aaXTotal > 150 && aaXTotal < 1000 && aaYTotal > 145 && aaYTotal < 700 && aaZTotal > 200 && aaZTotal < 700) {          
-                  isMoving = false;
-                  IMUPacket.startFlag = isMoving;
-                } 
-                else 
-                {
-                  isMoving = true;
-                  IMUPacket.startFlag = isMoving;
-                }
-  
-                counter = 0;
-                aaXPrevious = 0;
-                aaYPrevious = 0;
-                aaZPrevious = 0;
-                aaXDiff = 0;
-                aaYDiff = 0;
-                aaZDiff = 0;
-                aaXTotal = 0;
-                aaYTotal = 0;
-                aaZTotal = 0;
-              }
+
+              
             }
           }
         }

@@ -5,12 +5,15 @@ import struct
 import time
 import threading
 import sys
+import json
 from crccheck.crc import Crc16, CrcModbus
 
 BEETLEMAC1 = '80:30:DC:E9:1C:2F'
 BEETLEMAC2 = '80:30:DC:D9:23:1E'
 BEETLEMAC3 = '34:B1:F7:D2:34:71'
+BEETLEMAC4 = '2C:AB:33:CC:68:EF'
 counter = 0
+dataCollection = []
 class Delegate(btle.DefaultDelegate):
     def __init__(self, BEETLEMAC):
         btle.DefaultDelegate.__init__(self)
@@ -40,10 +43,19 @@ class Delegate(btle.DefaultDelegate):
                     dataBuffer[self.BEETLEMAC] = unpackedData[1:]
                     print(beetleName[self.BEETLEMAC], 'data: ', dataBuffer[self.BEETLEMAC])
                     receivedPacket[self.BEETLEMAC] += 1
+
+                    #For data collection
+                    global dataCollection
+                    if(unpackedData[1] == True):
+                        dataCollection.append({"dance": unpackedData[1], "accel1": unpackedData[2], "accel2": unpackedData[3], "accel3": unpackedData[4], "gyro1": unpackedData[5], "gyro2": unpackedData[6], "gyro3": unpackedData[7]})
+                   
                 else:
                     print(beetleName[self.BEETLEMAC], 'CRC Failed!')
                     missedPacket[self.BEETLEMAC] += 1
                     print(beetleName[self.BEETLEMAC], 'misspacket: ', missedPacket[self.BEETLEMAC])
+                    
+                    #For data collection
+                    dataCollection.append({"dance": "", "accel1": "", "accel2": "", "accel3": "", "gyro1": "", "gyro2": "", "gyro3": ""})
 
                 #reset
                 receivedData[self.BEETLEMAC] = bytes() 
@@ -52,8 +64,17 @@ class Delegate(btle.DefaultDelegate):
             except Exception as e:
                 missedPacket[self.BEETLEMAC] += 1
                 print(beetleName[self.BEETLEMAC], 'misspacket: ', missedPacket[self.BEETLEMAC])
+                
+                #reset
                 receivedData[self.BEETLEMAC] = bytes()
                 receivedData[self.BEETLEMAC] += data[data.index(b'}')+1:len(data)]
+                
+                #For data collection
+                dataCollection.append({"dance": "", "accel1": "", "accel2": "", "accel3": "", "gyro1": "", "gyro2": "", "gyro3": ""})
+
+            #with open("sidepump_john.json", "w") as outfile:
+                        #json.dump(dataCollection, outfile, indent = 1)
+                        #outfile.write('\n')
 
         else:
             receivedData[self.BEETLEMAC] += data
@@ -145,6 +166,7 @@ def getIMUData(BEETLEMAC):
     timestamp = getTime()
     startTimestamp[BEETLEMAC] = timestamp
     print('Ready to start: ',beetleName[BEETLEMAC], timestamp)
+    start = time.time()
 
     while(1):
         try:
@@ -169,13 +191,19 @@ def getIMUData(BEETLEMAC):
             reconnect(BEETLEMAC)
             reconnectTimeFlag = True
 
-        '''
+        
         end = time.time()
-        if(end-start > 10):
+        if(end-start > 90):
             print(end-start)
             print(receivedPacket)
+            global dataCollection
+            with open("gun_john.json", "w") as outfile:
+                json.dump(dataCollection, outfile, indent = 1)
+                outfile.write('\n')
+            print("end")
+
             break
-        '''
+        
 
 def initSetup(BEETLEMAC):
     initSetupSuccess[BEETLEMAC] = False
@@ -202,7 +230,7 @@ if __name__ == '__main__':
     beetleIDList = [BEETLEMAC2]
     beetleObject = {}
 
-    beetleName = {BEETLEMAC1: "beetle1", BEETLEMAC2: "beetle2", BEETLEMAC3: "beetle3"}
+    beetleName = {BEETLEMAC1: "beetle1", BEETLEMAC2: "beetle2", BEETLEMAC3: "beetle3", BEETLEMAC4: "beetle4"}
 
     #If initial setup is success, initSetupSuccess is set to true
     initSetupSuccess = {BEETLEMAC1: False, BEETLEMAC2: False, BEETLEMAC3: False}
@@ -248,10 +276,12 @@ if __name__ == '__main__':
     #thread1 = beetleThread(1, BEETLEMAC1)
     thread2 = beetleThread(2, BEETLEMAC2)
     #thread3 = beetleThread(3, BEETLEMAC3)
+    #thread4 = beetleThread(4, BEETLEMAC4)
 
     #thread1.start()
     thread2.start()
     #thread3.start()
+    #thread4.start()
     
     
 
