@@ -117,7 +117,7 @@ def generate_test_data(clustering, df):
     else:
         rand = random.randint(1,len(dances))
     unselected, selected = df[df['tag']!=rand], df[df['tag']==rand]
-    selected = selected[20:80]
+    selected = selected[0:100]
     if selected.shape[0] < unselected.shape[0]:
         unselected = unselected.sample(frac=selected.shape[0]/unselected.shape[0] * 0.1)
 
