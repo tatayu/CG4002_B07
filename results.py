@@ -12,6 +12,7 @@ import torch
 from sklearn import preprocessing
 
 from feature_extraction import *
+from config import *
 
 class CNN(torch.nn.Module):
     def __init__(self, d_in, d_hidden, d_out):
@@ -96,7 +97,7 @@ def smoothing(dataset):
     return _savgol_filter(dataset)
 
 def run():
-    f = open('test_gun.json',) 
+    f = open('sidepump_test.json',) 
     json_file = json.load(f)
     df = pd.DataFrame.from_dict(json_file)
 
@@ -127,11 +128,11 @@ def run():
     test_torch = torch.from_numpy(np.array(test_x))
     cnn_result = np.array(cnn_model.predict(test_torch))
     cnn_result += 1
-    print("Predicted tag for CNN:", stats.mode(cnn_result).mode[0], end='  ')
+    print("Predicted tag for CNN:", stats.mode(cnn_result).mode[0])
 
     knn_result = np.append(knn_result, mlp_result)
     knn_result = np.append(knn_result, cnn_result)
 
-    return stats.mode(knn_result).mode[0]
+    return dances[stats.mode(knn_result).mode[0]-1]
 
-run()
+print("Dance move:", run())
