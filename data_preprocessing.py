@@ -116,14 +116,13 @@ def generate_test_data(clustering, df):
         rand = random.randint(1,2)
     else:
         rand = random.randint(1,len(dances))
-    unselected, selected = df[df['tag']!=rand], df[df['tag']==rand]
-    selected = selected[0:100]
-    if selected.shape[0] < unselected.shape[0]:
-        unselected = unselected.sample(frac=selected.shape[0]/unselected.shape[0] * 0.1)
+    selected = df[df['tag']==rand][0:75]
 
-    print("Noise count:", unselected.shape)
-    print("Normal Data count:", selected.shape)
-    return pd.concat([unselected, selected]).iloc[:, :-1], rand
+    del selected['tag']
+    mu, sigma = 0, 0.03
+    noise = np.random.normal(mu, sigma, [75,7]) 
+    selected = selected + noise
+    return selected, rand
 
 # https://ieeexplore.ieee.org/document/8713728
 def smoothing(dataset, deployed):

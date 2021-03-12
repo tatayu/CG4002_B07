@@ -30,10 +30,14 @@ class CNN(torch.nn.Module):
         )
         self.fc2 = torch.nn.Linear(46, d_out)
         
+        self.dropout = torch.nn.Dropout(p=0.1)
+        
     def forward(self,x):
         x = x.float().unsqueeze(dim=1)
         x = self.relu(self.conv1(x))
+        x = self.dropout(x)
         x = self.relu(self.conv2(x))
+        x = self.dropout(x)
 #         x = self.relu(self.conv3(x))
 #         x = self.relu(self.conv4(x))
 #         x,_ = self.lstm1(x)
@@ -59,11 +63,15 @@ class MLP(torch.nn.Module):
         self.linear2 = torch.nn.Linear(d_hidden, d_hidden)
         self.linear3 = torch.nn.Linear(d_hidden, d_out)
 
+        self.dropout = torch.nn.Dropout(p=0.1)
+        
     def forward(self, X):
         X = X.view(-1, self.d_in)
         X = self.linear1(X.float())
         X = self.linear2(X)
+        X = self.dropout(X)
         X = self.linear3(X)
+        X = self.dropout(X)
         return torch.nn.functional.log_softmax(X, dim=1)
     
     def load(self, model_path):
