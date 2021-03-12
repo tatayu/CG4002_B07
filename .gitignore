@@ -1,6 +1,8 @@
 venv
+cg4002_venv
 __pycache__
 .ipynb_checkpoints
-./svm_model.pkl
-./knn_model.pkl
+svm_model.pkl
+knn_model.pkl
+rf_model.pkl
 test.py
