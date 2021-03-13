@@ -61,24 +61,6 @@ THE SOFTWARE.
 MPU6050 mpu;
 //MPU6050 mpu(0x69); // <-- use for AD0 high
 
-/* =========================================================================
-   NOTE: In addition to connection 3.3v, GND, SDA, and SCL, this sketch
-   depends on the MPU-6050's INT pin being connected to the Arduino's
-   external interrupt #0 pin. On the Arduino Uno and Mega 2560, this is
-   digital I/O pin 2.
- * ========================================================================= */
-
-/* =========================================================================
-   NOTE: Arduino v1.0.1 with the Leonardo board generates a compile error
-   when using Serial.write(buf, len). The Teapot output uses this method.
-   The solution requires a modification to the Arduino USBAPI.h file, which
-   is fortunately simple, but annoying. This will be fixed in the next IDE
-   release. For more info, see these links:
-
-   http://arduino.cc/forum/index.php/topic,109987.0.html
-   http://code.google.com/p/arduino/issues/detail?id=958
- * ========================================================================= */
-
 #define INTERRUPT_PIN 2  // use pin 2 on Arduino Uno & most boards
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 bool blinkState = false;
@@ -146,7 +128,8 @@ uint32_t nowTime = 0;
 // ================================================================
 bool isMoving = false;
 bool changePosition = false;
-bool isDancing = false;
+int16_t stopCounter = 0;
+//bool transmitFlag = false;
 
 const int sampleFrequency = 80; //40Hz sampling frequency rate
 int counter = 0;
@@ -292,8 +275,8 @@ void loop() {
       {
         preTime = millis();
         timePassed = millis();
-        if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) {
-             
+        if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) 
+        {   
           mpu.dmpGetAccel(&aaGravity, fifoBuffer);
           IMUPacket.ac1 = aaGravity.x;
           IMUPacket.ac2 = aaGravity.y;
@@ -304,19 +287,22 @@ void loop() {
           IMUPacket.gy2 = gg.y;
           IMUPacket.gy3 = gg.z;
         
+          //if(transmitFlag == true)
+          //{
           IMUPacket.beetleTime = timePassed - baseTime;
           Serial.write((const char *) &IMUPacket, sizeof(IMUPacket));
           uint16_t check = CRC16.modbus((uint8_t*)&IMUPacket, sizeof(IMUPacket));
           Serial.write((const char *) &check, sizeof(check));
           Serial.write('}');
+          //}
         
           //delay(25);
           nowTime = millis();
           while(nowTime - preTime < 25)
           {
             nowTime = millis();
-            if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) {
-              
+            if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) 
+            { 
               mpu.dmpGetAccel(&aaGravity, fifoBuffer);
         
               aaXDiff = abs(aaGravity.x - aaXPrevious);
@@ -328,21 +314,39 @@ void loop() {
               aaZDiff = abs(aaGravity.z - aaZPrevious);
               aaZPrevious = aaGravity.z;
               
-
-              if(aaXDiff > 400 && aaYDiff > 400 && aaZDiff > 400) {          
-                isMoving = true;
-                IMUPacket.startFlag = isMoving;
-              } 
-
-              
+            if(aaXDiff > 400 && aaYDiff > 400 && aaZDiff > 400) 
+            {          
+              isMoving = true;
+              IMUPacket.startFlag = isMoving;
+              //TODO: Send a signal or stop sending
+              //transmitFlag = true;
+            } 
+            else
+            { 
+              if(isMoving == true) //first time detect a stop
+              {
+                isMoving = false;
+                stopCounter = 0; 
+                IMUPacket.startFlag = true;
+              }
+              else //isMoving == false, consecutively detect a stop
+              {
+                stopCounter += 1;
+                if(stopCounter >= 100) //really a stop of a movement
+                {
+                  //transmitFlag = false;
+                  IMUPacket.startFlag = false;
+                }
+              }
             }
           }
         }
       }
     }
+  }
   
     // blink LED to indicate activity
     blinkState = !blinkState;
     digitalWrite(LED_PIN, blinkState);
-  }
+}
 }
