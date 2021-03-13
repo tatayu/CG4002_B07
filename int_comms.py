@@ -95,7 +95,7 @@ def getIMUData(BEETLEMAC):
             reconnectTimeFlag = True
 
 def unpackPacket(receivedData, BEETLEMAC):
-    unpackedData = struct.unpack('<I?6h', receivedData[BEETLEMAC][0:len(receivedData[BEETLEMAC])-3])            
+    unpackedData = struct.unpack('<?I6h', receivedData[BEETLEMAC][0:len(receivedData[BEETLEMAC])-3])            
     beetleCrc = struct.unpack('<H', receivedData[BEETLEMAC][(len(receivedData[BEETLEMAC])-3):(len(receivedData[BEETLEMAC])-1)])
     return unpackedData, beetleCrc
 
@@ -105,7 +105,7 @@ def getTime():
     return timeDecimal
 
 def timeParse(BEETLEMAC, unpackedData):
-    milliTime = unpackedData[0]
+    milliTime = unpackedData[1]
     if(reconnectFlag[BEETLEMAC] == True):
         return milliTime + reconnectTimestamp[BEETLEMAC]
     else:
@@ -145,14 +145,15 @@ class Delegate(btle.DefaultDelegate):
                     dataBuffer[self.BEETLEMAC] = unpackedData[1:]
                     
                     #dnace movement is false
-                    if(unpackedData[1] == False):
+                    if(unpackedData[0] == False):
                         print('Resting...')
                     
                     #dance movement is true
                     else: 
-                        #sending bytes to external comms
-                        laptopMain.insert(receivedData[BEETLEMAC][0:len(receivedData[BEETLEMAC])-3])
-                        print(beetleName[self.BEETLEMAC], 'data: ', receivedData[BEETLEMAC][0:len(receivedData[BEETLEMAC])-3])
+                        #sending bytes to external comms timestamp and IMU data
+                        laptopMain.insert(receivedData[BEETLEMAC][1:len(receivedData[BEETLEMAC])-3])
+                        #print(receivedData[BEETLEMAC][1:len(receivedData[BEETLEMAC])-3])
+                        print(beetleName[self.BEETLEMAC], 'data: ', str(unpackedData[1:]))
                         
                         #For data collection
                         #global dataCollection

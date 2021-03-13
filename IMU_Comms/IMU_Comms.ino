@@ -105,8 +105,8 @@ void dmpDataReady() {
 FastCRC16 CRC16;
 
 struct dataPacket {
-  uint32_t beetleTime;
   bool startFlag;
+  uint32_t beetleTime;
   int16_t ac1;
   int16_t ac2;
   int16_t ac3;

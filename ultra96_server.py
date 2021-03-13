@@ -47,7 +47,7 @@ class Server(threading.Thread):
 					dancer_id = split_msg[1]
 					self.ultra96.init_dancer(dancer_id)
 				elif (b'D' in msg):
-					unpackedData = struct.unpack('<I?6h', msg[1:])
+					unpackedData = struct.unpack('<I6h', msg[1:])
 					str_msg = str(unpackedData)
 					
 					########################TODO##############################
