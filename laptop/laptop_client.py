@@ -10,6 +10,8 @@ from Crypto import Random
 
 class Client(threading.Thread):
 	def __init__(self, laptop):
+		super(Client, self).__init__()
+
 		self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.laptop = laptop
 		self.dancer_id = -999
@@ -39,27 +41,10 @@ class Client(threading.Thread):
 		tunnel2.start()
 		print('[Tunnel Opened] Xilinx tunnel opened')
 
-	def encrypt_msg(self, msg):
-		secret_key = SECRET_KEY
-		msg += ' ' * (16 - (len(msg) % 16))
-		iv = Random.new().read(AES.block_size)
-		cipher = AES.new(str(secret_key).encode(), AES.MODE_CBC, iv)
-		encoded = base64.b64encode(iv + cipher.encrypt(msg.encode()))
-		return encoded
-
-	def decrypt_msg(self, msg):
-		decoded_message = base64.b64decode(msg)
-		iv = decoded_message[:16]
-		secret_key = bytes(str(SECRET_KEY), encoding="utf8")
-		cipher = AES.new(secret_key, AES.MODE_CBC, iv)
-		decrypted_message = cipher.decrypt(decoded_message[16:]).strip()
-		decrypted_message = decrypted_message.decode('utf8')
-
-		return decrypted_message
-
 	def send_msg(self, msg):
-		encrypted = self.encrypt_msg(msg)
-		self.client.sendall(encrypted)
+		if (isinstance(msg, str)):
+			msg = msg.encode()
+		self.client.sendall(msg)
 
 	def send_ready(self):
 		msg = f"[S]|{self.dancer_id}"
@@ -94,7 +79,7 @@ class Client(threading.Thread):
 
 		data = self.client.recv(256)
 		t4 = int(round(time.time() * 1000))
-		msg = self.decrypt_msg(data)
+		msg = data.decode('utf8')
 		split_msg = msg.split("|")
 		t2 = float(split_msg[2])
 		t3 = float(split_msg[3])
@@ -111,8 +96,7 @@ class Client(threading.Thread):
 			try:
 				data = self.client.recv(256)
 				if data:
-					msg = self.decrypt_msg(data)
-					msg = msg.strip()
+					msg = data.decode('utf8')
 					if ("[SC]" in msg):
 						self.clock_sync()
 					elif ("[S]" in msg):
@@ -121,6 +105,7 @@ class Client(threading.Thread):
 						self.clock_sync()
 			except Exception as e:
 				print(e)
+				break
 
 
 	def start_up(self):
@@ -133,7 +118,7 @@ class Client(threading.Thread):
 
 
 	def run(self):
-		self.start_tunnel(SUNFIRE_USERNAME, SUNFIRE_PASSWORD, ULTRA_ADDRESS)
+		#self.start_tunnel(SUNFIRE_USERNAME, SUNFIRE_PASSWORD, ULTRA_ADDRESS)
 		self.dancer_id = input("Input Dancer ID: ")
 		
 		try:
@@ -144,6 +129,7 @@ class Client(threading.Thread):
 			time.sleep(1)
 		except Exception as e:
 			print(e)
+			pass
                 
 if __name__ == '__main__':
 	pass

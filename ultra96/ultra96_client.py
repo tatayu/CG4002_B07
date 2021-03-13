@@ -24,7 +24,7 @@ class Client(threading.Thread):
 		msg += ' ' * (16 - (len(msg) % 16))
 		iv = Random.new().read(AES.block_size)
 		cipher = AES.new(str(secret_key).encode(), AES.MODE_CBC, iv)
-		encoded = base64.b64encode(iv + cipher.encrypt(msg.encode("utf8")))
+		encoded = base64.b64encode(iv + cipher.encrypt(msg.encode()))
 		return encoded
 
 	def recv_msg(self):
@@ -38,6 +38,7 @@ class Client(threading.Thread):
 					self.ultra96.set_dancer_positions(msg)
 				except Exception as e:
 					print(e)
+					pass
 
 	def send_prediction(self, p1, p2, p3, action, sync):
 		prediction = f"#{p1} {p2} {p3}|{action}|{sync}"

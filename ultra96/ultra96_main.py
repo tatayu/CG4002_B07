@@ -17,6 +17,8 @@ class Ultra96Main(threading.Thread):
 		super(Ultra96Main, self).__init__()
 
 		self.msg_queue = queue.Queue()
+		# Use MLStub() for local testing
+		#self.ml = MLStub()
 		self.ml = HardwareAccelerator()
 		self.server = Server(ultra96=self)
 		self.client = Client(ultra96=self)

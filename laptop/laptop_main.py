@@ -19,7 +19,7 @@ class LaptopMain(threading.Thread):
 		self.int_comms_stub = IntCommsStub(laptop=self)
 
 	def run(self):
-		#self.client.setDaemon(True)
+		self.client.setDaemon(True)
 		self.client.run()
 
 		#self.int_comms_stub.setDaemon(True)

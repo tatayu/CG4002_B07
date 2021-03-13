@@ -19,33 +19,11 @@ class Server(threading.Thread):
 		self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 	def send_msg(self, connection, msg):
-		encrypted = self.encrypt_msg(msg)
 		try:
-			connection.sendall(encrypted)
+			connection.sendall(msg.encode())
 		except Exception as e:
 			print(e)
-
-	def encrypt_msg(self, msg):
-		secret_key = SECRET_KEY
-		msg += ' ' * (16 - (len(msg) % 16))
-		iv = Random.new().read(AES.block_size)
-		cipher = AES.new(str(secret_key).encode(), AES.MODE_CBC, iv)
-		encoded = base64.b64encode(iv + cipher.encrypt(msg.encode()))
-		return encoded
-
-	def decrypt_msg(self, cipher_text):
-		decoded_message = base64.b64decode(cipher_text)
-		iv = decoded_message[:16]
-		secret_key = bytes(str(SECRET_KEY), encoding="utf8")
-
-		cipher = AES.new(secret_key, AES.MODE_CBC, iv)
-		decrypted_message = cipher.decrypt(decoded_message[16:]).strip()
-		decrypted_message = decrypted_message.decode('utf8')
-		return decrypted_message
-
-	def read_data(self, connection):
-		data = connection.recv(1024)
-		return data
+			pass
 
 	def handle_messages(self, connection, client_address):
 		#one for each thread
@@ -54,12 +32,11 @@ class Server(threading.Thread):
 
 
 		while True:
-			data = self.read_data(connection)
+			data = connection.recv(1024)
 			if data:
 				recv_time = int(round(time.time() * 1000))
-				msg = self.decrypt_msg(data)
-				msg = msg.strip()
-				
+				msg = data.decode('utf8')
+
 				if ("[C]" in msg):
 					# Clock sync
 					self.clock_sync(connection, msg, recv_time, dancer_id)
@@ -110,6 +87,7 @@ class Server(threading.Thread):
 				thread.start()
 			except Exception as e:
 				print(e)
+				pass
 
 		print ("[CONNECTED] All laptops connected!")
 		self.ultra96.all_connected.set()
