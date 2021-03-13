@@ -20,7 +20,7 @@
   - Handles communication between ultra96 and evaluation server
 - ultra96_server.py
   - Handles communication between laptops and ultra96 (num_laptops variable determines number of dancers to connect to the server)
-- HardwareAccelerator.py
+- hardware_accelerator.py
   - ML Class, takes in input data and outputs dance move
 - ml_stub.py
   - Stub for ML integration

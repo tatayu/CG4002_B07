@@ -2,7 +2,7 @@ from config import *
 from ml_stub import MLStub
 from ultra96_server import Server
 from ultra96_client import Client
-from HardwareAccelerator import HardwareAccelerator
+from hardware_accelerator import HardwareAccelerator
 import numpy as np
 import socket
 import threading
