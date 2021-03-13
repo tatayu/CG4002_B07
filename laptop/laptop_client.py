@@ -4,6 +4,7 @@ import socket
 import threading
 import base64
 import time
+import csv
 from Crypto.Cipher import AES
 from Crypto import Random
 
@@ -65,13 +66,19 @@ class Client(threading.Thread):
 		self.send_msg(msg)
 
 	def send_data(self):
-		while True:
-			if not (self.laptop.data_queue.empty()):
-				data = self.laptop.data_queue.get()
+		with open('test.csv', newline='') as f:
+			data_list = list(csv.reader(f))
 
-				data = data.replace(" ", "|")
-				msg = f"[D]|{data}"
+		#while True:
+			#if not (self.laptop.data_queue.empty()):
+				#data = self.laptop.data_queue.get()
+		for data in data_list:
+				#data = data.replace(" ", "|")
+				msg = "[D]"
+				for col in data:
+					msg += f"|{col}"
 				self.send_msg(msg)
+				time.sleep(10)
 
 	def poll_for_start(self):
 		while not self.is_start:
@@ -126,7 +133,7 @@ class Client(threading.Thread):
 
 
 	def run(self):
-		#self.start_tunnel(SUNFIRE_USERNAME, SUNFIRE_PASSWORD, ULTRA_ADDRESS)
+		self.start_tunnel(SUNFIRE_USERNAME, SUNFIRE_PASSWORD, ULTRA_ADDRESS)
 		self.dancer_id = input("Input Dancer ID: ")
 		
 		try:

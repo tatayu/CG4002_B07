@@ -2,6 +2,8 @@ from config import *
 from ml_stub import MLStub
 from ultra96_server import Server
 from ultra96_client import Client
+from HardwareAccelerator import HardwareAccelerator
+import numpy as np
 import socket
 import threading
 import base64
@@ -15,7 +17,7 @@ class Ultra96Main(threading.Thread):
 		super(Ultra96Main, self).__init__()
 
 		self.msg_queue = queue.Queue()
-		self.ml = MLStub(ultra96=self)
+		self.ml = HardwareAccelerator()
 		self.server = Server(ultra96=self)
 		self.client = Client(ultra96=self)
 		self.all_connected = threading.Event()
@@ -49,10 +51,13 @@ class Ultra96Main(threading.Thread):
 		self.predict_move()
 
 	def predict_move(self):
-		for dancer_id in self.dance_data.keys():
-			p0, p1, p2, action, sync = self.ml.output_move(self.dance_data[dancer_id].get())
+		#placeholder sync delay
+		sync = 1.23
 
-		self.client.send_prediction(p0, p1, p2, action, sync)
+		for dancer_id in self.dance_data.keys():
+			action = self.ml.predict(np.asarray(self.dance_data[dancer_id].get()))
+
+		self.client.send_prediction(self.dancer_positions[0], self.dancer_positions[1], self.dancer_positions[2], action, sync)
 
 def main():
 	ultra96Main = Ultra96Main()

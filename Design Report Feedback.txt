@@ -1,9 +1,0 @@
-Design Report Feedback:
-
-- Sharing memory across processes? Queue? mqtt?
-- passing data to ML process
-- include reply from server(eval_server) in report!
-- delay between the beetles also need to be taken into account
-- sync delay for dancer synchronization, methodology?
-- concurrency/data structure
-- measure RTTs between laptops and ultra96
