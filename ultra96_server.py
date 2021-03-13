@@ -6,6 +6,7 @@ import random
 import time
 from Crypto.Cipher import AES
 from Crypto import Random
+import struct
 
 class Server(threading.Thread):
 	def __init__(self, ultra96):
