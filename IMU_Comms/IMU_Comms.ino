@@ -314,7 +314,7 @@ void loop() {
               aaZDiff = abs(aaGravity.z - aaZPrevious);
               aaZPrevious = aaGravity.z;
               
-            if(aaXDiff > 400 && aaYDiff > 400 && aaZDiff > 400) 
+            if(aaXDiff > 275 || aaYDiff > 275 || aaZDiff > 275) 
             {          
               isMoving = true;
               IMUPacket.startFlag = isMoving;

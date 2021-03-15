@@ -196,7 +196,7 @@ class beetleThread (threading.Thread):
         else:
             beetleIDList.remove(BEETLEMAC)
 
-    
+'''    
         #For data collection
         end = time.time()
         if(end-start > 90):
@@ -209,6 +209,7 @@ class beetleThread (threading.Thread):
             print("end")
 
             break
+'''
 
         
 def initSetup(BEETLEMAC):
@@ -232,7 +233,7 @@ def initSetup(BEETLEMAC):
         initSetup(BEETLEMAC)
 
 if __name__ == '__main__':
-    beetleIDList = [BEETLEMAC1]
+    beetleIDList = [BEETLEMAC2]
     beetleObject = {}
 
     beetleName = {BEETLEMAC1: "beetle1", BEETLEMAC2: "beetle2"}
@@ -281,11 +282,11 @@ if __name__ == '__main__':
         if(initSetupSuccess[BEETLEMAC] == True):
             handShake(BEETLEMAC)
 
-    thread1 = beetleThread(1, BEETLEMAC1)
-    #thread2 = beetleThread(2, BEETLEMAC2)
+    #thread1 = beetleThread(1, BEETLEMAC1)
+    thread2 = beetleThread(2, BEETLEMAC2)
     
-    thread1.start()
-    #thread2.start()
+    #thread1.start()
+    thread2.start()
     
     
     
