@@ -57,14 +57,11 @@ class Client(threading.Thread):
 		while True:
 			if not (self.laptop.data_queue.empty()):
 				data = self.laptop.data_queue.get()
-		#for data in data_list:
-				#data = data.replace(" ", "|")
+
 				packetType = b'D'
 				msg = packetType + data
-				#for col in data:
-					#msg += f"|{col}"
+
 				self.send_msg(msg)
-				time.sleep(10)
 
 	def poll_for_start(self):
 		while not self.is_start:
