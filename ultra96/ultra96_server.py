@@ -32,24 +32,28 @@ class Server(threading.Thread):
 
 
 		while True:
-			data = connection.recv(1024)
-			if data:
+			msg = connection.recv(1024)
+			if msg:
 				recv_time = int(round(time.time() * 1000))
-				msg = data.decode('utf8')
 
 				if ("[C]" in msg):
+					msg = data.decode('utf8')
 					# Clock sync
 					self.clock_sync(connection, msg, recv_time, dancer_id)
 				elif ("[S]" in msg):
+					msg = data.decode('utf8')
 					# Record dancer details
 					split_msg = msg.split("|")
 					dancer_id = split_msg[1]
 					self.ultra96.init_dancer(dancer_id)
-				elif ("[D]" in msg):
-					split_msg = msg.split("|")
+				elif (b'D' in msg):
+					unpackedData = struct.unpack('<I6h', msg[1:])
+					msg = str(unpackedData)
+
+					time_stamp =int(msg[1])
 					to_print = f"[DATA] Passing data from {dancer_id}: {msg}"
 					print(to_print)
-					self.ultra96.pass_dance_data(dancer_id, [float(s) for s in split_msg[1:]])
+					self.ultra96.pass_dance_data(dancer_id, msg[2:])
 
 
 

@@ -54,16 +54,15 @@ class Client(threading.Thread):
 		with open('test.csv', newline='') as f:
 			data_list = list(csv.reader(f))
 
-		#while True:
-			#if not (self.laptop.data_queue.empty()):
-				#data = self.laptop.data_queue.get()
-		for data in data_list:
-				#data = data.replace(" ", "|")
-				msg = "[D]"
-				for col in data:
-					msg += f"|{col}"
-				self.send_msg(msg)
-				time.sleep(10)
+		while True:
+			if not (self.laptop.data_queue.empty()):
+				data = self.laptop.data_queue.get()
+				
+			packetType = b'D'
+			msg = packetType + data
+
+			self.send_msg(msg)
+			time.sleep(10)
 
 	def poll_for_start(self):
 		while not self.is_start:
