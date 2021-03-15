@@ -19,7 +19,7 @@ def feature_extract(df, window_size):
         titles = np.append(titles,["tag"])
 
     print("Begin Feature Extraction")
-    windows = set_sliding_windows(df, window_size//5, window_size)
+    windows = set_sliding_windows(df, window_size//10, window_size)
     # windows = set_windows(df, window_size)
     
     for window in windows:
@@ -65,7 +65,7 @@ def set_windows(df, window_size):
     return np.array(df).reshape(-1, window_size, df.shape[1])
 
 def set_sliding_windows(df, shift, window_size):
-    window_count = math.floor((len(df)-window_size)/shift)
+    window_count = math.ceil((len(df)-window_size+1)/shift)
     slides = np.array([])
     for i in range(window_count):
         slides = np.append(slides, df[i*shift:i*shift+window_size])

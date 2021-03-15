@@ -30,9 +30,9 @@ class CNN(torch.nn.Module):
             num_layers=2,
             batch_first=False,
         )
-        self.fc2 = torch.nn.Linear(46, d_out)
+        self.fc2 = torch.nn.Linear(42, d_out)
         
-        self.dropout = torch.nn.Dropout(p=0.1)
+        self.dropout = torch.nn.Dropout(p=0.15)
         
     def forward(self,x):
         x = x.float().unsqueeze(dim=1)
@@ -40,21 +40,12 @@ class CNN(torch.nn.Module):
         x = self.dropout(x)
         x = self.relu(self.conv2(x))
         x = self.dropout(x)
-#         x = self.relu(self.conv3(x))
+        x = self.relu(self.conv3(x))
 #         x = self.relu(self.conv4(x))
 #         x,_ = self.lstm1(x)
         x = x[:, -1]
         x = self.fc2(x)
         return x
-    
-    def load(self, model_path):
-        self.load_state_dict(torch.load(model_path))
-        self.eval()
-
-    def predict(self, X):
-        outputs = self(X.float())
-        _, predicted = torch.max(outputs, 1)
-        return predicted
 
 class MLP(torch.nn.Module):
     def __init__(self, d_in, d_hidden, d_out):
@@ -62,16 +53,17 @@ class MLP(torch.nn.Module):
         self.d_in = d_in
 
         self.linear1 = torch.nn.Linear(d_in, d_hidden)
-        self.linear2 = torch.nn.Linear(d_hidden, d_hidden)
-        self.linear3 = torch.nn.Linear(d_hidden, d_out)
+        self.linear2 = torch.nn.Linear(d_hidden, d_hidden//2)
+        self.linear3 = torch.nn.Linear(d_hidden//2, d_out)
 
         self.dropout = torch.nn.Dropout(p=0.1)
+        self.relu = torch.nn.ReLU()
         
     def forward(self, X):
         X = X.view(-1, self.d_in)
-        X = self.linear1(X.float())
-        X = self.linear2(X)
+        X = self.relu(self.linear1(X.float()))
         X = self.dropout(X)
+        X = self.relu(self.linear2(X))
         X = self.linear3(X)
         X = self.dropout(X)
         return torch.nn.functional.log_softmax(X, dim=1)

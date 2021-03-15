@@ -9,6 +9,8 @@ from scipy import stats
 from scipy.signal import savgol_filter
 import torch
 
+import brevitas.nn as nn
+
 from sklearn import preprocessing
 
 from feature_extraction import *
@@ -28,9 +30,9 @@ class CNN(torch.nn.Module):
             num_layers=2,
             batch_first=False,
         )
-        self.fc2 = torch.nn.Linear(46, d_out)
+        self.fc2 = torch.nn.Linear(42, d_out)
         
-        self.dropout = torch.nn.Dropout(p=0.1)
+        self.dropout = torch.nn.Dropout(p=0.15)
         
     def forward(self,x):
         x = x.float().unsqueeze(dim=1)
@@ -38,7 +40,7 @@ class CNN(torch.nn.Module):
         x = self.dropout(x)
         x = self.relu(self.conv2(x))
         x = self.dropout(x)
-#         x = self.relu(self.conv3(x))
+        x = self.relu(self.conv3(x))
 #         x = self.relu(self.conv4(x))
 #         x,_ = self.lstm1(x)
         x = x[:, -1]
@@ -59,19 +61,20 @@ class MLP(torch.nn.Module):
         super(MLP, self).__init__()
         self.d_in = d_in
 
-        self.linear1 = torch.nn.Linear(d_in, d_hidden)
-        self.linear2 = torch.nn.Linear(d_hidden, d_hidden)
-        self.linear3 = torch.nn.Linear(d_hidden, d_out)
+        self.linear1 = nn.QuantLinear(d_in, d_hidden, bias=True)
+        self.linear2 = nn.QuantLinear(d_hidden, d_hidden//4, bias=True)
+        self.linear3 = nn.QuantLinear(d_hidden//4, d_out, bias=False)
 
         self.dropout = torch.nn.Dropout(p=0.1)
+        self.relu = torch.nn.ReLU()
         
     def forward(self, X):
         X = X.view(-1, self.d_in)
-        X = self.linear1(X.float())
-        X = self.linear2(X)
-        X = self.dropout(X)
+        X = self.relu(self.linear1(X.float()))
+        # X = self.dropout(X)
+        X = self.relu(self.linear2(X))
         X = self.linear3(X)
-        X = self.dropout(X)
+        # X = self.dropout(X)
         return torch.nn.functional.log_softmax(X, dim=1)
     
     def load(self, model_path):
@@ -87,7 +90,10 @@ def knn_test(data):
     if isinstance(data, pd.DataFrame):
         data = data.to_numpy()
     knn = joblib.load(open('knn_model.pkl', 'rb'))
-    result = knn.predict(data)
+    try:
+        result = knn.predict(data)
+    except ValueError:
+        result = []
     return result
 
 def rf_test(data):
@@ -105,12 +111,20 @@ def smoothing(dataset):
     return _savgol_filter(dataset)
 
 def run():
-    f = open('sidepump_test.json',) 
+    f = open('hair_test.json',) 
     json_file = json.load(f)
-    df = pd.DataFrame.from_dict(json_file)
+    df = pd.DataFrame.from_dict(json_file)[340:420]
+    # print(df.head())
 
-    df = df.apply(pd.to_numeric).dropna()
-    x = df.values #returns a numpy array
+    # df = pd.read_csv('gun.csv')
+    # df.columns = ['accel1', 'accel2', 'accel3', 'gyro1', 'gyro2', 'gyro3']
+    # df['dance'] = True
+    # df = df[100:200]
+    # print(df.head())
+
+    t0 = time.time()
+    df = df.apply(pd.to_numeric).interpolate(method='polynomial', order=2)
+    x = df.values
     col = df.columns
     min_max_scaler = preprocessing.MinMaxScaler()
     df_scaled = min_max_scaler.fit_transform(df)
@@ -119,8 +133,11 @@ def run():
 
     smoothed_dataset = smoothing(df)
     test_x = feature_extract(smoothed_dataset, window_size=50).reset_index(drop=True)
-    knn_result = knn_test(test_x)
-    print("Predicted tag for KNN:", stats.mode(knn_result).mode[0], end='  ')
+    print(test_x.shape)
+
+    # knn_result = knn_test(test_x)
+    # if len(knn_result) > 0:
+    #     print("Predicted tag for KNN:", stats.mode(knn_result).mode[0], end='  ')
 
     mlp_model = MLP(54, 50, 3)
     mlp_model.load('MLP_Model')
@@ -130,16 +147,31 @@ def run():
     mlp_result += 1
     print("Predicted tag for MLP:", stats.mode(mlp_result).mode[0], end='  ')
 
-    cnn_model = CNN(54, 50, 3)
-    cnn_model.load('CNN_Model')
-    cnn_model.eval()
-    test_torch = torch.from_numpy(np.array(test_x))
-    cnn_result = np.array(cnn_model.predict(test_torch))
-    cnn_result += 1
-    print("Predicted tag for CNN:", stats.mode(cnn_result).mode[0])
+    # cnn_model = CNN(54, 50, 3)
+    # cnn_model.load('CNN_Model')
+    # cnn_model.eval()
+    # test_torch = torch.from_numpy(np.array(test_x))
+    # cnn_result = np.array(cnn_model.predict(test_torch))
+    # cnn_result += 1
+    # print("Predicted tag for CNN:", stats.mode(cnn_result).mode[0])
 
-    knn_result = np.append(knn_result, mlp_result)
-    knn_result = np.append(knn_result, cnn_result)
+    knn_result = mlp_result
+    # knn_result = np.append(knn_result, mlp_result)
+    # knn_result = np.append(knn_result, cnn_result)
+
+    proba_dict = {}
+
+    for x in knn_result:
+        x = dances[int(x)-1]
+        if x not in proba_dict:
+            proba_dict[x] = 1
+        else:
+            proba_dict[x] += 1
+    for k in proba_dict.keys():
+        proba_dict[k] /= len(knn_result) / 100
+        proba_dict[k] = float("%.2f" % proba_dict[k])
+
+    print("Percentage per prediction:", dict(sorted(proba_dict.items(), key=lambda item: -item[1])))
 
     return dances[stats.mode(knn_result).mode[0]-1]
 

@@ -34,4 +34,4 @@ for i,x in enumerate(entries):
     dances[i] = x[:-5]
 
 for k,v in dances.items():
-    print(f'Dance move: {k}, Name: {v}')
+    print(f'Dance move: {k+1}, Name: {v}')
