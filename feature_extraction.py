@@ -18,7 +18,7 @@ def feature_extract(df, window_size):
     if not deployed:
         titles = np.append(titles,["tag"])
 
-    print("Begin Feature Extraction")
+    # print("Begin Feature Extraction")
     windows = set_sliding_windows(df, window_size//10, window_size)
     # windows = set_windows(df, window_size)
     
