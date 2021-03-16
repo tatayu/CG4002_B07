@@ -153,12 +153,9 @@ class Delegate(btle.DefaultDelegate):
                         #sending bytes to external comms timestamp and IMU data
                         laptopMain.insert(receivedData[BEETLEMAC][1:len(receivedData[BEETLEMAC])-3])
                         #print(receivedData[BEETLEMAC][1:len(receivedData[BEETLEMAC])-3])
+                        print(beetleName[self.BEETLEMAC], 'data: ', receivedData[BEETLEMAC][1:len(receivedData[BEETLEMAC])-3])
                         print(beetleName[self.BEETLEMAC], 'data: ', str(unpackedData[1:]))
-                        
-                        #For data collection
-                        #global dataCollection
-                        #dataCollection.append({"accel1": unpackedData[2], "accel2": unpackedData[3], "accel3": unpackedData[4], "gyro1": unpackedData[5], "gyro2": unpackedData[6], "gyro3": unpackedData[7]})
-                
+
                     receivedPacket[self.BEETLEMAC] += 1
 
                 else:
@@ -166,9 +163,6 @@ class Delegate(btle.DefaultDelegate):
                     missedPacket[self.BEETLEMAC] += 1
                     print(beetleName[self.BEETLEMAC], 'misspacket: ', missedPacket[self.BEETLEMAC])
                     
-                    #For data collection
-                    #dataCollection.append({"accel1": "", "accel2": "", "accel3": "", "gyro1": "", "gyro2": "", "gyro3": ""})
-
                 #reset
                 receivedData[self.BEETLEMAC] = bytes() 
                 receivedData[self.BEETLEMAC] += data[data.index(b'}')+1:len(data)]
@@ -180,10 +174,7 @@ class Delegate(btle.DefaultDelegate):
                 #reset
                 receivedData[self.BEETLEMAC] = bytes()
                 receivedData[self.BEETLEMAC] += data[data.index(b'}')+1:len(data)]
-                
-                #For data collection
-                #dataCollection.append({"accel1": "", "accel2": "", "accel3": "", "gyro1": "", "gyro2": "", "gyro3": ""})
-
+    
         else:
             receivedData[self.BEETLEMAC] += data
 
@@ -198,21 +189,6 @@ class beetleThread (threading.Thread):
             getIMUData(self.BEETLEMAC)
         else:
             beetleIDList.remove(BEETLEMAC)
-
-    '''     
-            #For data collection
-            end = time.time()
-            if(end-start > 90):
-                print(end-start)
-                print(receivedPacket)
-                global dataCollection
-                with open("gun_john.json", "w") as outfile:
-                    json.dump(dataCollection, outfile, indent = 1)
-                    outfile.write('\n')
-                print("end")
-
-                break
-    '''
             
 def initSetup(BEETLEMAC):
     initSetupSuccess[BEETLEMAC] = False
@@ -236,7 +212,7 @@ def initSetup(BEETLEMAC):
 
 if __name__ == '__main__':
 
-    beetleIDList = [BEETLEMAC1]
+    beetleIDList = [BEETLEMAC2]
     beetleObject = {}
 
     beetleName = {BEETLEMAC1: "beetle1", BEETLEMAC2: "beetle2"}
@@ -285,11 +261,11 @@ if __name__ == '__main__':
         if(initSetupSuccess[BEETLEMAC] == True):
             handShake(BEETLEMAC)
 
-    thread1 = beetleThread(1, BEETLEMAC1)
-    #thread2 = beetleThread(2, BEETLEMAC2)
+    #thread1 = beetleThread(1, BEETLEMAC1)
+    thread2 = beetleThread(2, BEETLEMAC2)
     
-    thread1.start()
-    #thread2.start()
+    #thread1.start()
+    thread2.start()
 
     
 

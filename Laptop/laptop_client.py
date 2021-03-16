@@ -51,9 +51,6 @@ class Client(threading.Thread):
 		self.send_msg(msg)
 
 	def send_data(self):
-		with open('test.csv', newline='') as f:
-			data_list = list(csv.reader(f))
-
 		while True:
 			if not (self.laptop.data_queue.empty()):
 				data = self.laptop.data_queue.get()
@@ -116,7 +113,7 @@ class Client(threading.Thread):
 
 
 	def run(self):
-		#self.start_tunnel(SUNFIRE_USERNAME, SUNFIRE_PASSWORD, ULTRA_ADDRESS)
+		self.start_tunnel(SUNFIRE_USERNAME, SUNFIRE_PASSWORD, ULTRA_ADDRESS)
 		self.dancer_id = input("Input Dancer ID: ")
 		
 		try:
