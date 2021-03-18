@@ -92,6 +92,19 @@ def getIMUData(BEETLEMAC):
             print('Device disconneted!', beetleName[BEETLEMAC])
             reconnect(BEETLEMAC)
             reconnectTimeFlag = True
+    
+        #For data collection
+        end = time.time()
+        if(end-start > 90):
+            print(end-start)
+            print(receivedPacket)
+            global dataCollection
+            with open("wipetable1_xiaoxue.json", "w") as outfile:
+                json.dump(dataCollection, outfile, indent = 1)
+                outfile.write('\n')
+            print("end")
+            break
+
 
 def unpackPacket(receivedData, BEETLEMAC):
     unpackedData = struct.unpack('<?I6h', receivedData[BEETLEMAC][0:len(receivedData[BEETLEMAC])-3])            
@@ -193,23 +206,10 @@ class beetleThread (threading.Thread):
     def run(self):
         if(handShakeSuccess[self.BEETLEMAC]):
             getIMUData(self.BEETLEMAC)
+            
         else:
             beetleIDList.remove(BEETLEMAC)
-
     
-        #For data collection
-        end = time.time()
-        if(end-start > 90):
-            print(end-start)
-            print(receivedPacket)
-            global dataCollection
-            with open("gun_john.json", "w") as outfile:
-                json.dump(dataCollection, outfile, indent = 1)
-                outfile.write('\n')
-            print("end")
-
-            break
-
         
 def initSetup(BEETLEMAC):
     initSetupSuccess[BEETLEMAC] = False

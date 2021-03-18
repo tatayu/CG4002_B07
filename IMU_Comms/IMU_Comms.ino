@@ -160,59 +160,54 @@ void setup() {
 
     devStatus = mpu.dmpInitialize();
 
-    int bluno = 2;
+    //CHANGE BEFORE UPLAOD TO BEETLE
+    int bluno = 1;
+    
     // set offsets
-    if(bluno == 1)
+    if(bluno == 1) //Arm Beetle 1
     {
-      mpu.setXGyroOffset(156);
-      mpu.setYGyroOffset(-34);
-      mpu.setZGyroOffset(56);
-      mpu.setZAccelOffset(989); // 1688 factory default for my test chip
+      mpu.setXGyroOffset(216);
+      mpu.setYGyroOffset(-40);
+      mpu.setZGyroOffset(33);
+      mpu.setZAccelOffset(597); // 1688 factory default for my test chip
     }
 
-    else if(bluno == 2)
+    else if(bluno == 2) //Arm Beetle 2
     {
-      mpu.setXGyroOffset(259);
-      mpu.setYGyroOffset(-97);
-      mpu.setZGyroOffset(19);
-      mpu.setZAccelOffset(3578);
+      mpu.setXGyroOffset(253);
+      mpu.setYGyroOffset(-103);
+      mpu.setZGyroOffset(8);
+      mpu.setZAccelOffset(1804);
     }
-     else if(bluno == 3)
+     else if(bluno == 3) //Arm Beetle 3
     {
-      mpu.setXGyroOffset(240);
-      mpu.setYGyroOffset(-70);
-      mpu.setZGyroOffset(15);
-      mpu.setZAccelOffset(2472);
+      mpu.setXGyroOffset(81);
+      mpu.setYGyroOffset(-25);
+      mpu.setZGyroOffset(-34);
+      mpu.setZAccelOffset(2122);
     }
-    else if(bluno == 4)
+    else if(bluno == 4) //Waist Beetle 1
     {
-      mpu.setXGyroOffset(75);
-      mpu.setYGyroOffset(-41);
-      mpu.setZGyroOffset(-27);
-      mpu.setZAccelOffset(3840);
+      mpu.setXGyroOffset(155);
+      mpu.setYGyroOffset(-37);
+      mpu.setZGyroOffset(-56);
+      mpu.setZAccelOffset(1006);
     }
-    else if(bluno == 5)
+    else if(bluno == 5) // Waist Beetle 2
     {
-      mpu.setXGyroOffset(71);
-      mpu.setYGyroOffset(53);
-      mpu.setZGyroOffset(-7);
-      mpu.setZAccelOffset(3308);
+      mpu.setXGyroOffset(254);
+      mpu.setYGyroOffset(-55);
+      mpu.setZGyroOffset(18);
+      mpu.setZAccelOffset(973);
     }
-    else if(bluno == 6)
+    else if(bluno == 6) //Waist Beetle 3
     {
-      mpu.setXGyroOffset(169);
-      mpu.setYGyroOffset(-67);
-      mpu.setZGyroOffset(30);
-      mpu.setZAccelOffset(2076);
+      mpu.setXGyroOffset(80);
+      mpu.setYGyroOffset(36);
+      mpu.setZGyroOffset(-19);
+      mpu.setZAccelOffset(1770);
     }
-    else if(bluno == 7)
-    {
-      mpu.setXGyroOffset(259);
-      mpu.setYGyroOffset(-97);
-      mpu.setZGyroOffset(19);
-      mpu.setZAccelOffset(3578);
-    }
-
+   
     if (devStatus == 0) 
     {
       // Calibration Time: generate offsets and calibrate our MPU6050
