@@ -6,3 +6,7 @@ svm_model.pkl
 knn_model.pkl
 rf_model.pkl
 test.py
+*.json
+*.pkl
+*epoch*
+*.csv

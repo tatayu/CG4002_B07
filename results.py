@@ -124,7 +124,7 @@ def run(data):
         return
     arr = np.array(data.queue).reshape(-1,6)
     df = pd.DataFrame(arr, columns=['accel1', 'accel2', 'accel3', 'gyro1', 'gyro2', 'gyro3'])
-    df['dance'] = True
+    # df['dance'] = True
     # print(df.head())
 
     # df = pd.read_csv('gun.csv')
@@ -140,7 +140,7 @@ def run(data):
     df = pd.DataFrame(df_scaled, columns=col)
     df.reset_index(drop=True, inplace=True)
 
-    smoothed_dataset = smoothing(df)
+    smoothed_dataset = _savgol_filter(df)
     test_x = feature_extract(smoothed_dataset, window_size=50).reset_index(drop=True)
 
     knn_result = knn_test(test_x)

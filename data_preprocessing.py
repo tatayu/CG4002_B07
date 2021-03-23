@@ -13,10 +13,15 @@ def _consolidate_data():
     print("Consolidating Data")
     train_df = None
     test_df = None
+    i = -1
     for j, entry in enumerate(entries):
         df = pd.read_csv(directory + '/' + entry) 
         df = initialize(df)
-        tagged_df = data_tagging(df, j)
+
+        if entry.rsplit('_')[0] not in dances:
+            dances[entry] = 1
+            i += 1
+        tagged_df = data_tagging(df, i)
         
         if train_df is None:
             train_df = tagged_df[:int(len(tagged_df) * 4/5)]
@@ -30,11 +35,15 @@ def _consolidate_data():
     del train_temp['tag'], test_temp['tag']
 
     col = train_df.columns
-    min_max_scaler = preprocessing.MinMaxScaler()
-    train_scaled = min_max_scaler.fit_transform(train_df.values)
-    train_scaled = min_max_scaler.fit_transform(test_df.values)
-    train_df = pd.DataFrame(x_scaled, columns=col)
-    test_df = pd.DataFrame(x_scaled, columns=col)
+    # min_max_scaler = preprocessing.MinMaxScaler()
+    # train_scaled = min_max_scaler.fit_transform(train_df.values)
+    # train_scaled = min_max_scaler.fit_transform(test_df.values)
+
+    train_scaled = train_df.apply(lambda x: (x - min(x)) / (max(x) - min(x)))
+    test_scaled = test_df.apply(lambda x: (x - min(x)) / (max(x) - min(x)))
+
+    train_df = pd.DataFrame(train_scaled, columns=col)
+    test_df = pd.DataFrame(test_scaled, columns=col)
     train_df['tag'], test_df['tag'] = train_temp, test_temp
 
     return train_df.astype(float), test_df.astype(float)
@@ -43,33 +52,53 @@ def consolidate_data():
     print("Consolidating Data")
     train_df = None
     test_df = None
+    i = -1
+    dances_dict = {}
+
+    temp = 0
     for j, entry in enumerate(entries):
+        if temp % 3 == 0:
+            temp += 1
+            continue
         f = open(directory + '/' + entry,) 
         json_file = json.load(f)
         df = pd.DataFrame.from_dict(json_file)
-        tagged_df = data_tagging(df, j)
+        if entry.rsplit('_')[0][:-1] not in dances_dict:
+            dances_dict[entry.rsplit('_')[0][:-1]] = 1
+            i += 1
+        tagged_df = data_tagging(df, i)
         
         if train_df is None:
-            train_df = tagged_df[:int(tagged_df.shape[0] * 4/5)]
+            train_df = tagged_df[int(tagged_df.shape[0] * 2/10):int(tagged_df.shape[0] * 7/10)]
         else:
-            train_df = pd.concat([train_df, tagged_df[:int(tagged_df.shape[0] * 4/5)]])
+            train_df = pd.concat([train_df, tagged_df[int(tagged_df.shape[0] * 2/10):int(tagged_df.shape[0] * 7/10)]])
         if test_df is None:
-            test_df = tagged_df[int(tagged_df.shape[0] * 4/5):]
+            test_df = tagged_df[int(tagged_df.shape[0] * 7.5/10):int(tagged_df.shape[0] * 8.5/10)]
         else:
-            test_df = pd.concat([test_df, tagged_df[int(tagged_df.shape[0] * 4/5):]])
-    train_df = train_df.apply(pd.to_numeric).dropna()
-    test_df = test_df.apply(pd.to_numeric).dropna()
+            test_df = pd.concat([test_df, tagged_df[int(tagged_df.shape[0] * 7.5/10):int(tagged_df.shape[0] * 8.5/10)]])
+    
+    if 'dance' in train_df:
+        del train_df['dance']
+    if 'dance' in test_df:
+        del test_df['dance']
+
+    # train_df = train_df.apply(pd.to_numeric).dropna()
+    # test_df = test_df.apply(pd.to_numeric).dropna()
 
     train_temp = train_df[['tag']]
     test_temp = test_df[['tag']]
     train_df = train_df.drop(['tag'], axis=1)
     test_df = test_df.drop(['tag'], axis=1)
 
+    train_df = train_df.apply(pd.to_numeric).interpolate(method='polynomial', order=2)
+    test_df = test_df.apply(pd.to_numeric).interpolate(method='polynomial', order=2)
+
     x = train_df.values #returns a numpy array
     col = train_df.columns
-    min_max_scaler = preprocessing.MinMaxScaler()
-    x_scaled = min_max_scaler.fit_transform(x)
-    train_df = pd.DataFrame(x_scaled, columns=col)
+    # min_max_scaler = preprocessing.MinMaxScaler()
+    # x_scaled = min_max_scaler.fit_transform(x)
+    train_scaled = train_df.apply(lambda x: (x - min(x)) / (max(x) - min(x)))
+    train_df = pd.DataFrame(train_scaled, columns=col)
 
     train_df.reset_index(drop=True, inplace=True)
     train_temp.reset_index(drop=True, inplace=True)
@@ -77,9 +106,10 @@ def consolidate_data():
 
     x = test_df.values #returns a numpy array
     col = test_df.columns
-    min_max_scaler = preprocessing.MinMaxScaler()
-    x_scaled = min_max_scaler.fit_transform(x)
-    test_df = pd.DataFrame(x_scaled, columns=col)
+    # min_max_scaler = preprocessing.MinMaxScaler()
+    # x_scaled = min_max_scaler.fit_transform(x)
+    test_scaled = test_df.apply(lambda x: (x - min(x)) / (max(x) - min(x)))
+    test_df = pd.DataFrame(test_scaled, columns=col)
 
     test_df.reset_index(drop=True, inplace=True)
     test_temp.reset_index(drop=True, inplace=True)
@@ -128,9 +158,8 @@ def generate_test_data(clustering, df):
 def smoothing(dataset, deployed):
     if deployed:
         dataset = dataset[dataset.columns.difference(['dance'])]
-        return _savgol_filter(dataset)
+        return dataset #_savgol_filter(dataset)
     train, test = dataset[dataset.columns.difference(['tag', 'dance'])], dataset['tag']
-    print(train.head())
     dataset = _savgol_filter(train)
     train['tag'] = test
     return train

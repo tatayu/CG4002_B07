@@ -71,38 +71,78 @@ def knn(df, dim, save):
     nca = make_pipeline(StandardScaler(),
                         NeighborhoodComponentsAnalysis(n_components=dim,
                                                        random_state=42))
+    def DTWDistance(s1,s2):
+        DTW={}
 
-    knn = KNeighborsClassifier(n_neighbors=7)
+        for i in range(len(s1)):
+            DTW[(i, -1)] = float('inf')
+        for i in range(len(s2)):
+            DTW[(-1, i)] = float('inf')
+
+        DTW[(-1, -1)] = 0
+
+        for i in range(len(s1)):
+            for j in range(len(s2)):
+                dist= (s1[i]-s2[j])**2
+                DTW[(i, j)] = dist + min(DTW[(i-1, j)],DTW[(i, j-1)], DTW[(i-1, j-1)])
+        return np.sqrt(DTW[len(s1)-1, len(s2)-1])
+
+    from scipy.spatial import distance
+    def DTW(a, b):   
+        an = a.size
+        bn = b.size
+        pointwise_distance = distance.cdist(a.reshape(-1,1),b.reshape(-1,1))
+        cumdist = np.matrix(np.ones((an+1,bn+1)) * np.inf)
+        cumdist[0,0] = 0
+
+        for ai in range(an):
+            for bi in range(bn):
+                minimum_cost = np.min([cumdist[ai, bi+1],
+                                    cumdist[ai+1, bi],
+                                    cumdist[ai, bi]])
+                cumdist[ai+1, bi+1] = pointwise_distance[ai,bi] + minimum_cost
+        return cumdist[an, bn]
+    # X_train = list([np.array(x).reshape(1,-1) for x in X_train])
+    # y_train = list([int(x) for x in y_train.reshape(-1)])
+    # X_test = list([np.array(x).reshape(1,-1) for x in X_test])
+    # y_test = list([int(x) for x in y_test.reshape(-1)])
+    from sequentia.classifiers import KNNClassifier
+    from tslearn.neighbors import KNeighborsTimeSeriesClassifier
+    knn = KNeighborsClassifier(n_neighbors=7)#, weights='distance', metric='pyfunc', metric_params={"func": DTW})
+    # knn = KNeighborsTimeSeriesClassifier(n_neighbors=2, metric="dtw")
+    # knn = KNNClassifier(k=30, classes=list(set(y_train)))#, use_c=True)
     kf = KFold()
 
     dim_reduction_methods = [
         ('Principal Component Analysis',pca), 
-        ('Latent Dirichlet Allocation', lda),
-        ('Neighborhood Components Analysis', nca)
+        # ('Latent Dirichlet Allocation', lda),
+        # ('Neighborhood Components Analysis', nca)
     ]
-    knn.fit(X_train, y_train)
-    score = knn.score(X_test, y_test)
-    print("K-Nearest Neighbour Score:", score)
-    print()
+    # knn.fit(X_train, y_train)
+    # score = knn.score(X_test, y_test)
 
-    if save:
-        filename = './knn_model.pkl'
-        joblib.dump(knn, filename)
+    # print("K-Nearest Neighbour Score:", score)
+    # print()
+    # if save:
+    #     filename = './knn_model.pkl'
+    #     joblib.dump(knn, filename)
 
-    return score
+    # return score
     acc_knn = []
     for (name,model) in dim_reduction_methods:
         model.fit(X_train, y_train)
+        knn.fit(model.transform(X_train), y_train)
         if save:
             filename = './knn_model.pkl'
             tuple_obj = (knn, model)
             joblib.dump(tuple_obj, filename)
-        knn.fit(model.transform(X_train), y_train)
+        
         if name == 'Latent Dirichlet Allocation':
             print('K-Nearest Neighbour Validation Score:', 
                 np.mean(np.array(cross_val_score(model, X_train, y_train, cv=kf, scoring='f1_weighted'
             ))))
         score = knn.score(model.transform(X_test), y_test)
+        print(score)
         acc_knn.append(score)
 
     return np.max(np.array(acc_knn))
@@ -132,7 +172,7 @@ def random_forest(df, dim, save):
     ]
 
     # fit model
-    rfc = RandomForestClassifier(n_estimators=1000)
+    rfc = RandomForestClassifier(n_estimators=100)
     kf = KFold()
     print(X_train.shape, X_test.shape)
     print('Random Forest Validation Score:', np.mean(np.array(cross_val_score(rfc, X_train, y_train, cv=kf))))

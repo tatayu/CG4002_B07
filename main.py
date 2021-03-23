@@ -79,9 +79,7 @@ class MLP(torch.nn.Module):
 
 def main():
     train, test = consolidate_data()
-    f = open('features.json',) 
-    json_file = json.load(f)
-    print(json_file)
+
     if deployed:
         for i in range(testing_count):
             testset, tag = generate_test_data(clustering=clustering, df=test)
@@ -115,30 +113,27 @@ def main():
             print("Time taken:", t1-t0)
 
     else:
-        smoothed_dataset = smoothing(train, deployed)
-        train = feature_extract(smoothed_dataset, window_size=window_size).reset_index(drop=True)
-        
-        feature_importance = random_forest(train, dim=2, save=True)
-        # feature_list = feature_importance[:15].reset_index()['index'].to_list()
-        # feature_list.append('tag')
-        # train = train[feature_list]
-        train.to_csv('out_2.csv', index=False)
-        # print(train.head())
+        # smoothed_dataset_train = smoothing(train, deployed)
+        # train = feature_extract(train, window_size=window_size).reset_index(drop=True)
 
-        # with open('features.json', 'w') as f:
-        #     json.dump(feature_list, f)
+        # # smoothed_dataset_test = smoothing(test, deployed)
+        # test = feature_extract(test, window_size=window_size).reset_index(drop=True) 
 
-        # _ = random_forest(train, dim=2, save=True)
-        svm_accuracy = svm(train, size=window_size, save=True)
-        print("Support Vector Machine Accuracy:", svm_accuracy)
-        print()
+        # train.to_csv('out_7_train.csv', index=False)
+        # test.to_csv('out_7_test.csv', index=False)
+        train = pd.read_csv('out_6_train.csv')
+        # feature_importance = random_forest(train, dim=2, save=True)
+
+        # svm_accuracy = svm(train, size=window_size, save=True)
+        # print("Support Vector Machine Accuracy:", svm_accuracy)
+        # print()
         if clustering:
             knn_accuracy = knn(train, dim=1, save=True)
         else:
-            knn_accuracy = knn(train, dim=1, save=True)
+            knn_accuracy = knn(train, dim=8, save=True)
         print("K-Nearest Neighbour Accuracy:", knn_accuracy)
 
-        print(feature_importance)
+        # print(feature_importance)
     return
 
 if __name__ == "__main__":
