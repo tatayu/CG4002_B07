@@ -60,6 +60,12 @@ class Client(threading.Thread):
 
 				self.send_msg(msg)
 
+			if not (self.laptop.movement == "-"):
+				msg = f"[P]|{self.laptop.movement}"
+				self.laptop.movement = "-"
+
+				self.send_msg(msg)
+
 	def poll_for_start(self):
 		while not self.is_start:
 			time.sleep(0.5)
@@ -82,6 +88,9 @@ class Client(threading.Thread):
 		rtt = ((t4 - t1) - (t3 - t2))
 		#print(f"RTT: {rtt}")
 		self.clock_offset = ((t2 - t1) + (t3 - t4))/2
+
+		msg = f"[O]|{self.clock_offset}"
+		self.send_msg(msg)
 
 		to_print = f"[CLOCK SYNC] Clock offset for Dancer {self.dancer_id}: {self.clock_offset}"
 		print(to_print)
