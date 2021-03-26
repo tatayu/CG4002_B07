@@ -15,6 +15,7 @@ class LaptopMain(threading.Thread):
 
 		self.data_queue = queue.Queue()
 		self.client = Client(laptop=self)
+		self.movement = "-"
 
 	def run(self):
 		#self.client.setDaemon(True)
@@ -25,3 +26,6 @@ class LaptopMain(threading.Thread):
 
 	def collect(self, data):
 		return self.data_queue.get()
+	
+	def position(self, movement):
+		self.movement = movement
