@@ -137,12 +137,13 @@ class Delegate(btle.DefaultDelegate):
                 #get waist data
                 if(beetleName[self.BEETLEMAC] == 'beetle2'):
                     unpackedData = struct.unpack('<cc', receivedData[self.BEETLEMAC])
-                    if(unpackedData[0] == b'N'):
+                    direction = unpackedData[0].decode('ISO-8859-1')
+                    if(direction == 'N'):
                         print('Stationary...')
                     else:
                         #sending position to ext comms
-                        laptopMain.position(str(unpackedData[0]))
-                        print(beetleName[self.BEETLEMAC], 'data: ', str(unpackedData[0]))
+                        laptopMain.position(direction)
+                        print(beetleName[self.BEETLEMAC], 'data: ', direction)
                 
                 #get arm data
                 else:
