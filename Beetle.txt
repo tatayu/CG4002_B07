@@ -1,0 +1,10 @@
+# CG4002_B07
+Beetle1(Arm): 80:30:DC:E9:1C:2F
+Beetle2(Arm): 80:30:DC:D9:23:1E
+Beetle3(Arm): 34:B1:F7:D2:34:71
+
+Beetle1(Waist): 80:30:DC:D9:1C:60
+Beetle2(Waist): 2C:AB:33:CC:68:EF
+Beetle3(Waist): 80:30:DC:E8:EF:FA
+
+Beetle7(EMG): 80:30:DC:D9:0C:E8
