@@ -44,7 +44,7 @@ class Client(threading.Thread):
 	def send_msg(self, msg):
 		if (isinstance(msg, str)):
 			msg = msg.encode()
-		self.client.sendall(msg)
+		self.client.send(msg)
 
 	def send_ready(self):
 		msg = f"[S]|{self.dancer_id}"
@@ -63,6 +63,7 @@ class Client(threading.Thread):
 			if not (self.laptop.movement == "-"):
 				msg = f"[P]|{self.laptop.movement}"
 				self.laptop.movement = "-"
+				msg = msg.ljust(17, "|")
 
 				self.send_msg(msg)
 
@@ -90,6 +91,7 @@ class Client(threading.Thread):
 		self.clock_offset = ((t2 - t1) + (t3 - t4))/2
 
 		msg = f"[O]|{self.clock_offset}"
+		msg = msg.ljust(17, "|")
 		self.send_msg(msg)
 
 		to_print = f"[CLOCK SYNC] Clock offset for Dancer {self.dancer_id}: {self.clock_offset}"
