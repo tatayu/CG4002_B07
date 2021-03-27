@@ -11,7 +11,8 @@ from laptop_main import LaptopMain
 
 BEETLEMAC1 = '80:30:DC:E9:1C:2F'
 #BEETLEMAC1 = '34:B1:F7:D2:34:71'
-BEETLEMAC2 = '80:30:DC:D9:23:1E'
+#BEETLEMAC2 = '80:30:DC:D9:23:1E'
+BEETLEMAC2 = '80:30:DC:E8:EF:FA'
 
 counter = 0
 dataCollection = []
@@ -129,40 +130,51 @@ class Delegate(btle.DefaultDelegate):
         
         #detect the end of a packet
         elif (b'}' in data): 
-            #global counter #packet number
-            #counter += 1
-            #print(counter)
+
             try:   
                 receivedData[self.BEETLEMAC] += data[0:data.index(b'}')+1]
-                unpackedData, beetleCrc = unpackPacket(receivedData, self.BEETLEMAC) 
-                pcCrc = CRC(beetleCrc, receivedData, self.BEETLEMAC)
-
-                #Compare CRC calculated by PC and beetle
-                if(str(pcCrc) == str(beetleCrc)[1:len(str(beetleCrc))-2]):
-                    timestamp = timeParse(self.BEETLEMAC, unpackedData)
-
-                    print(beetleName[self.BEETLEMAC], 'timestamp: ' ,timestamp)
-                    dataBuffer[self.BEETLEMAC] = unpackedData[1:]
-                    
-                    #dnace movement is false
-                    if(unpackedData[0] == False):
-                        print('Resting...')
-                    
-                    #dance movement is true
-                    else: 
-                        #sending bytes to external comms timestamp and IMU data
-                        laptopMain.insert(receivedData[BEETLEMAC][1:len(receivedData[BEETLEMAC])-3])
-                        #print(receivedData[BEETLEMAC][1:len(receivedData[BEETLEMAC])-3])
-                        print(beetleName[self.BEETLEMAC], 'data: ', receivedData[BEETLEMAC][1:len(receivedData[BEETLEMAC])-3])
-                        print(beetleName[self.BEETLEMAC], 'data: ', str(unpackedData[1:]))
-
-                    receivedPacket[self.BEETLEMAC] += 1
-
+                
+                #get waist data
+                if(beetleName[self.BEETLEMAC] == 'beetle2'):
+                    unpackedData = struct.unpack('<cc', receivedData[self.BEETLEMAC])
+                    direction = unpackedData[0].decode('ISO-8859-1')
+                    if(direction == 'N'):
+                        print('Stationary...')
+                    else:
+                        #sending position to ext comms
+                        laptopMain.position(direction)
+                        print(beetleName[self.BEETLEMAC], 'data: ', direction)
+                
+                #get arm data
                 else:
-                    print(beetleName[self.BEETLEMAC], 'CRC Failed!')
-                    missedPacket[self.BEETLEMAC] += 1
-                    print(beetleName[self.BEETLEMAC], 'misspacket: ', missedPacket[self.BEETLEMAC])
-                    
+                    unpackedData, beetleCrc = unpackPacket(receivedData, self.BEETLEMAC) 
+                    pcCrc = CRC(beetleCrc, receivedData, self.BEETLEMAC)
+
+                    #Compare CRC calculated by PC and beetle
+                    if(str(pcCrc) == str(beetleCrc)[1:len(str(beetleCrc))-2]):
+                        timestamp = timeParse(self.BEETLEMAC, unpackedData)
+
+                        print(beetleName[self.BEETLEMAC], 'timestamp: ' ,timestamp)
+                        dataBuffer[self.BEETLEMAC] = unpackedData[1:]
+                        
+                        #dnace movement is false
+                        if(unpackedData[0] == False):
+                            print('Resting...')
+                        
+                        #dance movement is true
+                        else: 
+                            #sending bytes to external comms timestamp and IMU data
+                            laptopMain.insert(receivedData[BEETLEMAC][1:len(receivedData[BEETLEMAC])-3])
+                            #print(beetleName[self.BEETLEMAC], 'data: ', receivedData[self.BEETLEMAC][1:len(receivedData[self.BEETLEMAC])-3])
+                            print(beetleName[self.BEETLEMAC], 'data: ', str(unpackedData[1:]))
+
+                        receivedPacket[self.BEETLEMAC] += 1
+
+                    else:
+                        print(beetleName[self.BEETLEMAC], 'CRC Failed!')
+                        missedPacket[self.BEETLEMAC] += 1
+                        print(beetleName[self.BEETLEMAC], 'misspacket: ', missedPacket[self.BEETLEMAC])
+                        
                 #reset
                 receivedData[self.BEETLEMAC] = bytes() 
                 receivedData[self.BEETLEMAC] += data[data.index(b'}')+1:len(data)]
