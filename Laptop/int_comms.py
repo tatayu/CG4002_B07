@@ -74,16 +74,17 @@ def getIMUData(BEETLEMAC):
 
     while(1):
         try:
-            if(reconnectTimeFlag == True):
-                timestamp = getTime()
-                reconnectTimestamp[BEETLEMAC] = timestamp
-                print('Reconnect ready to start: ', beetleName[BEETLEMAC], timestamp)
-                reconnectTimeFlag = False
-            
             if not beetleObject[BEETLEMAC].waitForNotifications(2):
                 charac= beetleObject[BEETLEMAC].getCharacteristics(uuid = 'dfb1')[0]
                 print('sending D to beetle ', beetleName[BEETLEMAC])
                 charac.write(bytes('D', 'ISO 8859-1'), withResponse=False)
+
+                if(reconnectTimeFlag == True):
+                    timestamp = getTime()
+                    reconnectTimestamp[BEETLEMAC] = timestamp
+                    print('Reconnect ready to start: ', beetleName[BEETLEMAC], timestamp)
+                    reconnectTimeFlag = False
+            
                 IMUDataRequest[BEETLEMAC] += 1
 
                 if(IMUDataRequest[BEETLEMAC] > 4):
@@ -91,9 +92,8 @@ def getIMUData(BEETLEMAC):
                     IMUDataRequest[BEETLEMAC] = 0 #reset
                 
         except BTLEException:
-            print('Device disconneted!', beetleName[BEETLEMAC])
-            reconnect(BEETLEMAC)
-            reconnectTimeFlag = True
+            print('Device disconneted!', beetleName[BEETLEMAC]) 
+            reconnectTimeFlag = reconnect(BEETLEMAC)
 
 def unpackPacket(receivedData, BEETLEMAC):
     unpackedData = struct.unpack('<?I6h', receivedData[BEETLEMAC][0:len(receivedData[BEETLEMAC])-3])            
