@@ -24,6 +24,7 @@ def handShake(BEETLEMAC):
             print('Handshaking with ', beetleName[BEETLEMAC], '...')
             charac= beetleObject[BEETLEMAC].getCharacteristics(uuid = 'dfb1')[0]
             charac.write(bytes('H', 'ISO 8859-1'), withResponse=False) 
+            beetleSendTime[BEETLEMAC] = getTime()
             print('sending H to ', beetleName[BEETLEMAC])
             beetleObject[BEETLEMAC].waitForNotifications(2)
 
@@ -70,7 +71,6 @@ def getIMUData(BEETLEMAC):
     timestamp = getTime()
     startTimestamp[BEETLEMAC] = timestamp
     print('Ready to start: ',beetleName[BEETLEMAC], timestamp)
-    start = time.time()
 
     while(1):
         try:
@@ -108,9 +108,9 @@ def getTime():
 def timeParse(BEETLEMAC, unpackedData):
     milliTime = unpackedData[1]
     if(reconnectFlag[BEETLEMAC] == True):
-        return milliTime + reconnectTimestamp[BEETLEMAC]
+        return milliTime + reconnectTimestamp[BEETLEMAC] + beetleOffset[BEETLEMAC]
     else:
-        return milliTime + startTimestamp[BEETLEMAC]
+        return milliTime + startTimestamp[BEETLEMAC] + beetleOffset[BEETLEMAC]
 
 def CRC(beetleCrc, receivedData, BEETLEMAC):
     crcCheck = CrcModbus()
@@ -125,12 +125,15 @@ class Delegate(btle.DefaultDelegate):
     def handleNotification(self, cHandle, data):
         #receive handshake reply from beetle
         if(data == b'A'): 
-            print('receiving A from ', beetleName[self.BEETLEMAC])
+            beetleReceiveTime[self.BEETLEMAC] = getTime()
+            print('received A from ', beetleName[self.BEETLEMAC])
             handShakeFlag[self.BEETLEMAC]= True
+            beetleOffset[self.BEETLEMAC] = round((beetleReceiveTime[self.BEETLEMAC] - beetleSendTime[self.BEETLEMAC])/2)
+            print(beetleName[self.BEETLEMAC], 'Offset: ', beetleOffset[self.BEETLEMAC])
         
         #detect the end of a packet
         elif (b'}' in data): 
-
+            
             try:   
                 receivedData[self.BEETLEMAC] += data[0:data.index(b'}')+1]
                 
@@ -153,7 +156,7 @@ class Delegate(btle.DefaultDelegate):
                     #Compare CRC calculated by PC and beetle
                     if(str(pcCrc) == str(beetleCrc)[1:len(str(beetleCrc))-2]):
                         timestamp = timeParse(self.BEETLEMAC, unpackedData)
-
+                        #print(getTime() - beetleOffset[self.BEETLEMAC])
                         print(beetleName[self.BEETLEMAC], 'timestamp: ' ,timestamp)
                         dataBuffer[self.BEETLEMAC] = unpackedData[1:]
                         
@@ -164,8 +167,9 @@ class Delegate(btle.DefaultDelegate):
                         #dance movement is true
                         else: 
                             #sending bytes to external comms timestamp and IMU data
-                            laptopMain.insert(receivedData[BEETLEMAC][1:len(receivedData[BEETLEMAC])-3])
-                            #print(beetleName[self.BEETLEMAC], 'data: ', receivedData[self.BEETLEMAC][1:len(receivedData[self.BEETLEMAC])-3])
+                            sendData = struct.pack('<I6h', timestamp, unpackedData[2], unpackedData[3], unpackedData[4], unpackedData[5], unpackedData[6], unpackedData[7])
+                            laptopMain.insert(sendData)
+                            #print(beetleName[self.BEETLEMAC], 'data: ', sendData)
                             print(beetleName[self.BEETLEMAC], 'data: ', str(unpackedData[1:]))
 
                         receivedPacket[self.BEETLEMAC] += 1
@@ -180,6 +184,7 @@ class Delegate(btle.DefaultDelegate):
                 receivedData[self.BEETLEMAC] += data[data.index(b'}')+1:len(data)]
         
             except Exception as e:
+                #print(e)
                 missedPacket[self.BEETLEMAC] += 1
                 print(beetleName[self.BEETLEMAC], 'misspacket: ', missedPacket[self.BEETLEMAC])
                 
@@ -228,6 +233,12 @@ if __name__ == '__main__':
     beetleObject = {}
 
     beetleName = {BEETLEMAC1: "beetle1", BEETLEMAC2: "beetle2"}
+
+    beetleSendTime = {BEETLEMAC1: 0, BEETLEMAC2: 0}
+
+    beetleReceiveTime = {BEETLEMAC1: 0, BEETLEMAC2: 0}
+
+    beetleOffset = {BEETLEMAC1: 0, BEETLEMAC2: 0}
 
     #If initial setup is success, initSetupSuccess is set to true
     initSetupSuccess = {BEETLEMAC1: False, BEETLEMAC2: False}
