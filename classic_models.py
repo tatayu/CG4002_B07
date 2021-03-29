@@ -51,6 +51,27 @@ def svm(df, size, save):
         joblib.dump(clf, filename)
 
     return score
+    
+from fastdtw import fastdtw
+class KNNDTW():
+    def __init__(self, n_neighbors=5, n_weights = 'uniform'):
+        self.n_neighbors = n_neighbors
+        self.n_weights = n_weights
+        self.knn = KNeighborsClassifier(self.n_neighbors, metric = self.dtw, weights = self.n_weights, n_jobs = -1)
+    
+    def fit(self, X, y):
+        self.X = X
+        self.y = y
+        self.knn.fit(X, y)
+    
+    def dtw(self, t1, t2):
+        return fastdtw(t1,t2)[0]
+    
+    def predict(self, X):
+        return self.knn.predict(X) 
+
+def dtw(t1, t2):
+    return fastdtw(t1,t2)[0]
 
 def knn(df, dim, save):
     if isinstance(df, pd.DataFrame):
@@ -102,13 +123,38 @@ def knn(df, dim, save):
                                     cumdist[ai, bi]])
                 cumdist[ai+1, bi+1] = pointwise_distance[ai,bi] + minimum_cost
         return cumdist[an, bn]
+
+
     # X_train = list([np.array(x).reshape(1,-1) for x in X_train])
     # y_train = list([int(x) for x in y_train.reshape(-1)])
     # X_test = list([np.array(x).reshape(1,-1) for x in X_test])
     # y_test = list([int(x) for x in y_test.reshape(-1)])
     from sequentia.classifiers import KNNClassifier
     from tslearn.neighbors import KNeighborsTimeSeriesClassifier
-    knn = KNeighborsClassifier(n_neighbors=7)#, weights='distance', metric='pyfunc', metric_params={"func": DTW})
+    from sklearn.model_selection import GridSearchCV
+    from sklearn.neighbors import NearestCentroid
+    # #define the model and parameters
+    # knn = KNeighborsClassifier()
+
+    # parameters = {'n_neighbors':[4,6,8,10,12,14,16,18,20],
+    #             'leaf_size':[1,3,5],
+    #             'algorithm':['auto', 'kd_tree'],
+    #             'n_jobs':[-1]}
+
+    # #Fit the model
+    # model = GridSearchCV(knn, param_grid=parameters)
+    # model.fit(X_train,y_train)
+    # print(model.best_params_)
+
+    # from skmultilearn.adapt import MLkNN
+    # knn = KNNDTW()
+    # knn = MLkNN(k=3)
+    # knn = KNeighborsClassifier(
+    #     n_neighbors=5, 
+    #     weights='distance', 
+    #     leaf_size=5
+    # )
+    knn = NearestCentroid()
     # knn = KNeighborsTimeSeriesClassifier(n_neighbors=2, metric="dtw")
     # knn = KNNClassifier(k=30, classes=list(set(y_train)))#, use_c=True)
     kf = KFold()
@@ -118,16 +164,22 @@ def knn(df, dim, save):
         # ('Latent Dirichlet Allocation', lda),
         # ('Neighborhood Components Analysis', nca)
     ]
-    # knn.fit(X_train, y_train)
-    # score = knn.score(X_test, y_test)
+    print(X_train.shape, y_train.shape)
+    knn.fit(X_train, y_train)
+    if save:
+        filename = './knn_model_8.pkl'
+        joblib.dump(knn, filename)
+    score = knn.score(X_test, y_test)
 
-    # print("K-Nearest Neighbour Score:", score)
-    # print()
-    # if save:
-    #     filename = './knn_model.pkl'
-    #     joblib.dump(knn, filename)
+    from sklearn.metrics import classification_report,confusion_matrix
+    pred = knn.predict(X_test)
+    print(confusion_matrix(y_test,pred))
+    print(classification_report(y_test,pred))
+    
+    print("K-Nearest Neighbour Score:", score)
+    print()
 
-    # return score
+    return score
     acc_knn = []
     for (name,model) in dim_reduction_methods:
         model.fit(X_train, y_train)
@@ -172,12 +224,12 @@ def random_forest(df, dim, save):
     ]
 
     # fit model
-    rfc = RandomForestClassifier(n_estimators=100)
-    kf = KFold()
-    print(X_train.shape, X_test.shape)
-    print('Random Forest Validation Score:', np.mean(np.array(cross_val_score(rfc, X_train, y_train, cv=kf))))
+    rfc = RandomForestClassifier(n_estimators=10000)
+    # kf = KFold()
+    # print(X_train.shape, X_test.shape)
+    # print('Random Forest Validation Score:', np.mean(np.array(cross_val_score(rfc, X_train, y_train, cv=kf))))
 
-    acc_knn = []
+    # acc_knn = []
 
     rfc.fit(X_train, y_train)
     y_pred = rfc.predict(X_test)

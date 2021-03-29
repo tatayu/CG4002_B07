@@ -40,7 +40,7 @@ feature_list = [
 ]
 
 testing_count = 20
-window_size = 300
+window_size = 100
 overlap = 0
 clustering = False
 deployed = False

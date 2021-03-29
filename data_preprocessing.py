@@ -73,9 +73,9 @@ def consolidate_data():
         else:
             train_df = pd.concat([train_df, tagged_df[int(tagged_df.shape[0] * 2/10):int(tagged_df.shape[0] * 7/10)]])
         if test_df is None:
-            test_df = tagged_df[int(tagged_df.shape[0] * 7.5/10):int(tagged_df.shape[0] * 8.5/10)]
+            test_df = tagged_df[int(tagged_df.shape[0] * 7/10):int(tagged_df.shape[0] * 8/10)]
         else:
-            test_df = pd.concat([test_df, tagged_df[int(tagged_df.shape[0] * 7.5/10):int(tagged_df.shape[0] * 8.5/10)]])
+            test_df = pd.concat([test_df, tagged_df[int(tagged_df.shape[0] * 7/10):int(tagged_df.shape[0] * 8/10)]])
     
     if 'dance' in train_df:
         del train_df['dance']
@@ -99,6 +99,8 @@ def consolidate_data():
     # x_scaled = min_max_scaler.fit_transform(x)
     train_scaled = train_df.apply(lambda x: (x - min(x)) / (max(x) - min(x)))
     train_df = pd.DataFrame(train_scaled, columns=col)
+    # robust_scaler = preprocessing.RobustScaler()
+    # train_scaled = robust_scaler.fit_transform(x)
 
     train_df.reset_index(drop=True, inplace=True)
     train_temp.reset_index(drop=True, inplace=True)

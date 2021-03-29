@@ -42,14 +42,34 @@ def moves_template():
     )
 
 def main():
-    arr = moves_template()
-    pos = np.array([1,2,3])
-    for r in arr:
-        pos, move = moves_after_round(pos, r)
+    # arr = moves_template()
+    # pos = np.array([1,2,3])
+    # for r in arr:
+    #     pos, move = moves_after_round(pos, r)
     
-    f = open('collected_data/sidepump_john.json',) 
-    test_json = json.load(f)
+    # f = open('collected_data/sidepump_john.json',) 
+    # test_json = json.load(f)
     
-    test_df = pd.DataFrame.from_dict(test_json)
-    print(test_df.shape)
+    # test_df = pd.DataFrame.from_dict(test_json)
+    # print(test_df.shape)
+
+    arr = ['be', 'jackson', 'jacques', 'jack', 'cee']
+    query = ['jack', 'b', 'c']
+
+    arr.sort()
+    arr_str = ' '.join(arr)
+    ans = 0
+    for q in query:
+        idx = len(arr_str[:arr_str.index(q[0])].split())
+        while (1):
+            if idx == len(arr):
+                break
+            if q == arr[idx]:
+                idx += 1
+            elif q == arr[idx][:len(q)]:
+                idx += 1
+                ans += 1
+            else:
+                break
+    print(ans)
 main()
