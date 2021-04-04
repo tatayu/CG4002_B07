@@ -74,6 +74,8 @@ def set_sliding_windows(df, overlap, window_size):
     slides = np.array([])
     # print("Set sliding windows:", window_count)
     for i in range(window_count):
+        # if i % 100 == 0:
+            # print("Sliding:", i)
         slides = np.append(slides, df[i*(window_size-overlap):i*(window_size-overlap)+window_size])
     slides = slides.reshape(
         window_count,
@@ -81,6 +83,13 @@ def set_sliding_windows(df, overlap, window_size):
         df.shape[1]
     )
     return slides
+
+
+def _roll(a, shift):
+    if not isinstance(a, np.ndarray):
+        a = np.asarray(a)
+    idx = shift % len(a)
+    return np.concatenate([a[-idx:], a[:-idx]])
 
 def add_max(data):
     return np.max(data)
@@ -103,9 +112,6 @@ def add_std(data):
 def add_iqr(data):
     return np.percentile(data, 75) - np.percentile(data, 25)
 
-def add_skew(data):
-    return skew(data)
-
 def add_zero_crossing_count(data):
     zero_crossings = np.where(np.diff(np.signbit(data)))[0]
     return len(zero_crossings)
@@ -117,68 +123,87 @@ def add_dominant_frequency(data):
     dom_freq = abs(freqs[i])
     return dom_freq
 
-def add_cwt(data):
-    return feature_calculators.number_cwt_peaks(data, 3)
+def number_peaks(x, n):
+    x_reduced = x[n:-n]
+
+    res = None
+    for i in range(1, n + 1):
+        result_first = (x_reduced > _roll(x, i)[n:-n])
+
+        if res is None:
+            res = result_first
+        else:
+            res &= result_first
+
+        res &= (x_reduced > _roll(x, -i)[n:-n])
+    return np.sum(res)
 
 def add_no_peaks(data):
-    return feature_calculators.number_peaks(data, 3)
+    return number_peaks(data, 3)
+
+def percentage_of_reoccurring_datapoints_to_all_datapoints(x):
+    if len(x) == 0:
+        return np.nan
+
+    if not isinstance(x, pd.Series):
+        x = pd.Series(x)
+
+    value_counts = x.value_counts()
+    reoccuring_values = value_counts[value_counts > 1].sum()
+
+    if np.isnan(reoccuring_values):
+        return 0
+
+    return reoccuring_values / x.size
 
 def add_recurring_dp(data):
-    return feature_calculators.percentage_of_reoccurring_datapoints_to_all_datapoints(data)
+    return percentage_of_reoccurring_datapoints_to_all_datapoints(data)
 
-def add_ratio_v_tsl(data):
-    return feature_calculators.ratio_value_number_to_time_series_length(data)
-
-def add_sum_recurring_dp(data):
-    return feature_calculators.sum_of_reoccurring_data_points(data)
-
-def add_var_coeff(data):
-    return feature_calculators.variation_coefficient(data)
-
-def add_sample_entropy(data):
-    return feature_calculators.sample_entropy(data)
-
-def add_abs_energy(data):
-    return feature_calculators.abs_energy(data)/1000
-
-def add_kurtosis(data):
-    return feature_calculators.kurtosis(data)
-
-def time_reversal_asymmetry_statistic(x, lag):
+def variation_coefficient(x):
     """
-    This function calculates the value of
-
-    .. math::
-
-        \\frac{1}{n-2lag} \\sum_{i=1}^{n-2lag} x_{i + 2 \\cdot lag}^2 \\cdot x_{i + lag} - x_{i + lag} \\cdot  x_{i}^2
-
-    which is
-
-    .. math::
-
-        \\mathbb{E}[L^2(X)^2 \\cdot L(X) - L(X) \\cdot X^2]
-
-    where :math:`\\mathbb{E}` is the mean and :math:`L` is the lag operator. It was proposed in [1] as a
-    promising feature to extract from time series.
-
-    .. rubric:: References
-
-    |  [1] Fulcher, B.D., Jones, N.S. (2014).
-    |  Highly comparative feature-based time-series classification.
-    |  Knowledge and Data Engineering, IEEE Transactions on 26, 3026–3037.
+    Returns the variation coefficient (standard error / mean, give relative value of variation around mean) of x.
 
     :param x: the time series to calculate the feature of
     :type x: numpy.ndarray
-    :param lag: the lag that should be used in the calculation of the feature
-    :type lag: int
     :return: the value of this feature
     :return type: float
     """
-    n = len(x)
-    x = np.asarray(x)
-    if 2 * lag >= n:
-        return 0
+    mean = np.mean(x)
+    if mean != 0:
+        return np.std(x) / mean
     else:
-        one_lag = _roll(x, -lag)
-        two_lag = _roll(x, 2 * -lag)
-        return np.mean((two_lag * two_lag * one_lag - one_lag * x * x)[0:(n - 2 * lag)])
+        return np.nan
+
+def add_var_coeff(data):
+    return variation_coefficient(data)
+
+def kurtosis(x):
+    if not isinstance(x, pd.Series):
+        x = pd.Series(x)
+    return pd.Series.kurtosis(x)
+
+def add_kurtosis(data):
+    return kurtosis(data)
+
+def sum_of_reoccurring_data_points(x):
+    """
+    Returns the sum of all data points, that are present in the time series
+    more than once.
+
+    For example
+
+        sum_of_reoccurring_data_points([2, 2, 2, 2, 1]) = 8
+
+    as 2 is a reoccurring value, so all 2's are summed up.
+
+    This is in contrast to ``sum_of_reoccurring_values``,
+    where each reoccuring value is only counted once.
+
+    :param x: the time series to calculate the feature of
+    :type x: numpy.ndarray
+    :return: the value of this feature
+    :return type: float
+    """
+    unique, counts = np.unique(x, return_counts=True)
+    counts[counts < 2] = 0
+    return np.sum(counts * unique)

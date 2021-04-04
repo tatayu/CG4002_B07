@@ -79,7 +79,7 @@ class MLP(torch.nn.Module):
 
 def main():
     train, test = consolidate_data()
-
+    # train, test = test_consolidate_data()
     if deployed:
         for i in range(testing_count):
             testset, tag = generate_test_data(clustering=clustering, df=test)
@@ -114,14 +114,15 @@ def main():
 
     else:
         # smoothed_dataset_train = smoothing(train, deployed)
+        print(train.shape)
         train = feature_extract(train, window_size=window_size).reset_index(drop=True)
 
-        # smoothed_dataset_test = smoothing(test, deployed)
+        smoothed_dataset_test = smoothing(test, deployed)
         test = feature_extract(test, window_size=window_size).reset_index(drop=True) 
 
-        train.to_csv('out_10_train.csv', index=False)
-        test.to_csv('out_10_test.csv', index=False)
-        train = pd.read_csv('out_10_train.csv')
+        train.to_csv('out_12_train.csv', index=False)
+        test.to_csv('out_12_test.csv', index=False)
+        train = pd.read_csv('out_12_train.csv')
         # feature_importance = random_forest(train, dim=2, save=True)
 
         # svm_accuracy = svm(train, size=window_size, save=True)

@@ -149,12 +149,12 @@ def knn(df, dim, save):
     # from skmultilearn.adapt import MLkNN
     # knn = KNNDTW()
     # knn = MLkNN(k=3)
-    # knn = KNeighborsClassifier(
-    #     n_neighbors=5, 
-    #     weights='distance', 
-    #     leaf_size=5
-    # )
-    knn = NearestCentroid()
+    knn = KNeighborsClassifier(
+        n_neighbors=25, 
+        weights='distance', 
+        leaf_size=7
+    )
+    # knn = NearestCentroid()
     # knn = KNeighborsTimeSeriesClassifier(n_neighbors=2, metric="dtw")
     # knn = KNNClassifier(k=30, classes=list(set(y_train)))#, use_c=True)
     kf = KFold()
