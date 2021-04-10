@@ -9,11 +9,11 @@ import json
 from crccheck.crc import Crc16, CrcModbus
 from laptop_main import LaptopMain
 
-#BEETLEMAC1 = '80:30:DC:E9:1C:2F'
-BEETLEMAC1 = '34:B1:F7:D2:34:71'
+BEETLEMAC1 = '80:30:DC:E9:1C:2F'
+#BEETLEMAC1 = '34:B1:F7:D2:34:71'
 #BEETLEMAC1 = '80:30:DC:D9:23:1E'
 #BEETLEMAC1 = '80:30:DC:E8:EF:FA'
-BEETLEMAC2 = '2C:AB:33:CC:68:EF'
+BEETLEMAC2 = '80:30:DC:D9:1C:60'
 
 counter = 0
 dataCollection = []
@@ -108,7 +108,7 @@ def getTime():
 
 def timeParse(BEETLEMAC, unpackedData):
     milliTime = unpackedData[1]
-    return milliTime + startTimestamp[BEETLEMAC] + beetleOffset[BEETLEMAC]
+    return milliTime - beetleOffset[BEETLEMAC]
 
 def CRC(beetleCrc, receivedData, BEETLEMAC):
     crcCheck = CrcModbus()
@@ -154,8 +154,9 @@ class Delegate(btle.DefaultDelegate):
 
                     #Compare CRC calculated by PC and beetle
                     if(str(pcCrc) == str(beetleCrc)[1:len(str(beetleCrc))-2]):
-                        timestamp = timeParse(self.BEETLEMAC, unpackedData)
-                        print(getTime() - beetleOffset[self.BEETLEMAC])
+                        #timestamp = timeParse(self.BEETLEMAC, unpackedData)
+                        timestamp = getTime() - beetleOffset[self.BEETLEMAC]
+                        #print(getTime() - beetleOffset[self.BEETLEMAC])
                         print(beetleName[self.BEETLEMAC], 'timestamp: ' ,timestamp)
                         dataBuffer[self.BEETLEMAC] = unpackedData[1:]
                         
@@ -167,7 +168,7 @@ class Delegate(btle.DefaultDelegate):
                         else: 
                             #sending bytes to external comms timestamp and IMU data
                             sendData = struct.pack('<I6h', timestamp, unpackedData[2], unpackedData[3], unpackedData[4], unpackedData[5], unpackedData[6], unpackedData[7])
-                            laptopMain.insert(sendData)
+                            #laptopMain.insert(sendData)
                             #print(beetleName[self.BEETLEMAC], 'data: ', sendData)
                             print(beetleName[self.BEETLEMAC], 'data: ', str(unpackedData[1:]))
 
@@ -210,7 +211,7 @@ class beetleThread (threading.Thread):
 def initSetup(BEETLEMAC):
     initSetupSuccess[BEETLEMAC] = False
     try:
-        if(initSetupSuccess[BEETLEMAC] == False and initSetupRetry[BEETLEMAC] < 5):
+        if(initSetupSuccess[BEETLEMAC] == False and initSetupRetry[BEETLEMAC] < 3):
             beetle = btle.Peripheral(BEETLEMAC)
             beetle_delegate = Delegate(BEETLEMAC)
             beetle.withDelegate(beetle_delegate)
@@ -228,7 +229,7 @@ def initSetup(BEETLEMAC):
 
 if __name__ == '__main__':
 
-    beetleIDList = [BEETLEMAC2]
+    beetleIDList = [BEETLEMAC1,BEETLEMAC2]
     beetleObject = {}
 
     beetleName = {BEETLEMAC1: "beetle1", BEETLEMAC2: "beetle2"}
@@ -272,19 +273,19 @@ if __name__ == '__main__':
     #If reconnect happens and it's success, reconnectFlag is set to true
     reconnectFlag = {BEETLEMAC1: False, BEETLEMAC2: False}
 
-    laptopMain = LaptopMain()
-    laptopMain.run()
+    #laptopMain = LaptopMain()
+    #laptopMain.run()
     
     for BEETLEMAC in beetleIDList:
         initSetup(BEETLEMAC)
         if(initSetupSuccess[BEETLEMAC] == True):
             handShake(BEETLEMAC)
 
-    #thread1 = beetleThread(1, BEETLEMAC1)
-    thread2 = beetleThread(2, BEETLEMAC2)
+    thread1 = beetleThread(1, BEETLEMAC1)
+    #thread2 = beetleThread(2, BEETLEMAC2)
     
-    #thread1.start()
-    thread2.start()
+    thread1.start()
+    #thread2.start()
 
     
 
