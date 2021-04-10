@@ -168,7 +168,7 @@ class Delegate(btle.DefaultDelegate):
                         else: 
                             #sending bytes to external comms timestamp and IMU data
                             sendData = struct.pack('<I6h', timestamp, unpackedData[2], unpackedData[3], unpackedData[4], unpackedData[5], unpackedData[6], unpackedData[7])
-                            #laptopMain.insert(sendData)
+                            laptopMain.insert(sendData)
                             #print(beetleName[self.BEETLEMAC], 'data: ', sendData)
                             print(beetleName[self.BEETLEMAC], 'data: ', str(unpackedData[1:]))
 
@@ -273,8 +273,8 @@ if __name__ == '__main__':
     #If reconnect happens and it's success, reconnectFlag is set to true
     reconnectFlag = {BEETLEMAC1: False, BEETLEMAC2: False}
 
-    #laptopMain = LaptopMain()
-    #laptopMain.run()
+    laptopMain = LaptopMain()
+    laptopMain.run()
     
     for BEETLEMAC in beetleIDList:
         initSetup(BEETLEMAC)
@@ -282,10 +282,10 @@ if __name__ == '__main__':
             handShake(BEETLEMAC)
 
     thread1 = beetleThread(1, BEETLEMAC1)
-    #thread2 = beetleThread(2, BEETLEMAC2)
+    thread2 = beetleThread(2, BEETLEMAC2)
     
     thread1.start()
-    #thread2.start()
+    thread2.start()
 
     
 
