@@ -140,10 +140,15 @@ class Delegate(btle.DefaultDelegate):
                 if(beetleName[self.BEETLEMAC] == 'beetle2'):
                     unpackedData = struct.unpack('<cc', receivedData[self.BEETLEMAC])
                     direction = unpackedData[0].decode('ISO-8859-1')
-                    if(direction == 'N'):
+                    if(direction == 'N'): #Stationary N
                         print('Stationary...')
+                    elif(direction == 'E'): #logout move E
+                        timestamp = getTime() - beetleOffset[self.BEETLEMAC] #timestamp of the logout move
+                        direction = direction + '|' + str(timestamp)
+                        laptopMain.position(direction)
+                        print(beetleName[self.BEETLEMAC], 'data: ', direction)
                     else:
-                        #sending position to ext comms
+                        #sending position to ext comms L of R
                         laptopMain.position(direction)
                         print(beetleName[self.BEETLEMAC], 'data: ', direction)
                 
@@ -154,7 +159,6 @@ class Delegate(btle.DefaultDelegate):
 
                     #Compare CRC calculated by PC and beetle
                     if(str(pcCrc) == str(beetleCrc)[1:len(str(beetleCrc))-2]):
-                        #timestamp = timeParse(self.BEETLEMAC, unpackedData)
                         timestamp = getTime() - beetleOffset[self.BEETLEMAC]
                         #print(getTime() - beetleOffset[self.BEETLEMAC])
                         print(beetleName[self.BEETLEMAC], 'timestamp: ' ,timestamp)
@@ -169,7 +173,6 @@ class Delegate(btle.DefaultDelegate):
                             #sending bytes to external comms timestamp and IMU data
                             sendData = struct.pack('<I6h', timestamp, unpackedData[2], unpackedData[3], unpackedData[4], unpackedData[5], unpackedData[6], unpackedData[7])
                             laptopMain.insert(sendData)
-                            #print(beetleName[self.BEETLEMAC], 'data: ', sendData)
                             print(beetleName[self.BEETLEMAC], 'data: ', str(unpackedData[1:]))
 
                         receivedPacket[self.BEETLEMAC] += 1
