@@ -1,8 +1,9 @@
-EVAL_ADDRESS = ("localhost", 8083)
+EVAL_ADDRESS = ("137.132.92.73", 8084)
+
 ULTRA_ADDRESS = ("localhost", 8081)
 
 SECRET_KEY = "0000000000000000"
 
-DESIGN_PATH= "'MLP_DMA/design_2.bit'"
-INPUT_SIZE=31
+DESIGN_PATH= "../jupyter_notebooks/CNN_DMA/eval_5.bit"
+INPUT_SIZE=72
 OUTPUT_SIZE=1

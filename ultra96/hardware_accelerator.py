@@ -11,9 +11,12 @@ class HardwareAccelerator:
     
     # Allocates buffer for the input and output
     def buffer_allocate(self, inputs):
+        # print(self.input_size)
         input_buffer = allocate(shape=(self.input_size,), dtype=np.float32)
+        # print(input_buffer)
         for i in range(self.input_size):
-            input_buffer[i] = inputs[i]
+            # print(i)
+            input_buffer[i] = inputs[0][i]
 
         output_buffer = allocate(shape=(self.output_size,), dtype=np.float32)
         input_buffer.flush()
@@ -25,8 +28,9 @@ class HardwareAccelerator:
         for i in range(output_buffer.size):
             outputs.append(output_buffer[i])
         return outputs
-    
+   
     def predict(self, test_input):
+        # print(test_input)
         input_buffer, output_buffer = self.buffer_allocate(test_input)
         self.design_dma.sendchannel.transfer(input_buffer)
         self.design_dma.recvchannel.transfer(output_buffer)

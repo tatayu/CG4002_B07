@@ -34,7 +34,7 @@ class Client(threading.Thread):
 			if data:
 				try:
 					msg = data.decode("utf8")
-					#print(msg)
+					print(msg)
 					self.ultra96.set_dancer_positions(msg)
 				except Exception as e:
 					print(e)
@@ -51,7 +51,7 @@ class Client(threading.Thread):
 	def run(self):
 		self.client.connect(EVAL_ADDRESS)
 		thread = threading.Thread(target=self.recv_msg)
-		thread.daemon = True
+		#thread.daemon = True
 		thread.start()
 
 		#self.dummy_data()
@@ -60,7 +60,7 @@ class Client(threading.Thread):
 		time.sleep(65)
 
 		position = [1, 2, 3]
-		actions = ["gun", "sidepump", "hair"]
+		actions = ["gun", "hair", "sidepump"]
 		sync = [1.23, 2.13, 3.12]
 
 		for x in range(len(actions)):

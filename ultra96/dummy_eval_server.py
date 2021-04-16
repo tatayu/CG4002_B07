@@ -17,12 +17,12 @@ import pandas as pd
 from Crypto.Cipher import AES
 
 # Week 13 test: 8 moves, so 33 in total = (8*4) + 1 (logout)
-#ACTIONS = ['gun', 'sidepump', 'hair', 'pointhigh', 'elbowkick', 'listen', 'dab', 'wipetable']
+ACTIONS = ['gun', 'sidepump', 'hair', 'pointhigh', 'elbowkick', 'listen', 'dab', 'wipetable']
 # Week 9 and 11 tests: 3 moves, repeated 4 times each = 12 moves.
-ACTIONS = ['gun', 'sidepump', 'hair']
+#ACTIONS = ['gun', 'sidepump', 'hair']
 POSITIONS = ['1 2 3', '3 2 1', '2 3 1', '3 1 2', '1 3 2', '2 1 3']
 LOG_DIR = os.path.join(os.path.dirname(__file__), 'evaluation_logs')
-NUM_MOVE_PER_ACTION = 4
+NUM_MOVE_PER_ACTION = 2
 N_TRANSITIONS = 6
 MESSAGE_SIZE = 3 # position, 1 action, sync 
 
@@ -170,6 +170,9 @@ class Server(threading.Thread):
         self.action = self.actions[int(index/NUM_MOVE_PER_ACTION)] # produces indexing error if unchanged
         position = random.randrange(0, len(POSITIONS))
         self.dancer_positions = POSITIONS[position]
+        print_pos = self.dancer_positions
+        print_move = self.action
+        print("[POS] {0} | [DANCE] {1}".format(print_pos,print_move))
         self.idx += 1
         self.action_set_time = time.time()
 
@@ -181,7 +184,9 @@ class Server(threading.Thread):
         log_filepath = self.log_filepath
 #        pos_string = ' '.join(self.dancer_positions)
         pos_string = self.dancer_positions
+
         if not os.path.exists(log_filepath):  # first write
+            #os.remove(log_filepath)   
             with open(log_filepath, 'w') as f:
                 self.df.to_csv(f)
 
