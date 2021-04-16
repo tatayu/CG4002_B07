@@ -178,8 +178,6 @@ class Ultra96Main(threading.Thread):
                     print(dance)
                     if (dance is not None and (not self.isSent)):
                         sync_delay = max(self.dancer_timestamps.values()) - min(i for i in list(self.dancer_timestamps.values()) if i > 0)
-                        if (sync_delay > 5000 or sync_delay <= 0):
-                            sync_delay = random.randint(300, 3000)
 
                         self.client.send_prediction(self.dancer_positions[0], self.dancer_positions[1], self.dancer_positions[2], self.action_dict[dance], sync_delay)
                         self.movements = ["-", "-", "-"]
