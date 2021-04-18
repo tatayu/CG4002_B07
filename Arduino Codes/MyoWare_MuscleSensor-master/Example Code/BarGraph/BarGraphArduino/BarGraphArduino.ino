@@ -1,3 +1,4 @@
+
 // reads analog input from the five inputs from your arduino board 
 // and sends it out via serial
 
@@ -36,5 +37,3 @@ void loop()
   // wait for a bit to not overload the port
   delay(10);
 }
-
-

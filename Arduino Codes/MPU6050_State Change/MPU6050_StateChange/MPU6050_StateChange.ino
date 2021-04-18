@@ -179,7 +179,7 @@ void setup() {
     devStatus = mpu.dmpInitialize();
     
     
-    int bluno = 1;
+    int bluno = 2;
     // supply your own gyro offsets here, scaled for min sensitivity
     
     if(bluno == 1)
@@ -282,27 +282,10 @@ void loop() {
     if (!dmpReady) return;
     // read a packet from FIFO
     if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { // Get the Latest packet 
+      
+          mpu.dmpGetAccel(&aaGravity, fifoBuffer); // Reads from the packet, raw accel data
 
-        #ifdef OUTPUT_ACCEL_GRAVITY
-            // display acceleration with gravity included
-            mpu.dmpGetAccel(&aaGravity, fifoBuffer); // Reads from the packet, raw accel data
-//            Serial.print("acc\t");
-//            Serial.print(aaGravity.x);
-//            Serial.print("\t");
-//            Serial.print(aaGravity.y);
-//            Serial.print("\t");
-//            Serial.println(aaGravity.z);
-        #endif*/
 
-        if(counter == 0) 
-        {
-          aaXPrevious = aaGravity.x;
-          aaYPrevious = aaGravity.y;
-          aaZPrevious = aaGravity.z;
-
-          counter++;
-        } else if(counter > 0 && counter < sampleFrequency)
-        {
           aaXDiff = abs(aaGravity.x - aaXPrevious);
           aaXPrevious = aaGravity.x;
           
@@ -312,44 +295,38 @@ void loop() {
           aaZDiff = abs(aaGravity.z - aaZPrevious);
           aaZPrevious = aaGravity.z;
 
-          
-          aaXTotal += aaXDiff;
-          aaYTotal += aaYDiff;
-          aaZTotal += aaZDiff;
 
-          counter++;
-        } else if(counter == sampleFrequency) 
-        {
           Serial.print("Acceleration Diffrence Total\t");
-          Serial.print(aaXTotal);
+          Serial.print(aaXDiff);
           Serial.print("\t");
-          Serial.print(aaYTotal);
+          Serial.print(aaYDiff);
           Serial.print("\t");
-          Serial.print(aaZTotal);
+          Serial.print(aaZDiff);
 
-        if(aaXTotal > 150 && aaXTotal < 1000 && aaYTotal > 145 && aaYTotal < 700 && aaZTotal > 200 && aaZTotal < 700) {          
-          isMoving = false;
-          Serial.println("Dancer is not moving");
-        } else 
-        {
+        //aaXTotal > 150 && aaXTotal < 1000 && aaYTotal > 145 && aaYTotal < 700 && aaZTotal > 200 && aaZTotal < 700
+        if(aaXDiff > 120 || aaYDiff > 120 || aaZDiff > 120) {          
           isMoving = true;
           Serial.println("Dancer is moving");
+        } else 
+        {
+          isMoving = false;
+          Serial.println("Dancer is not moving");
         }
 
-        counter = 0;
-        aaXPrevious = 0;
-        aaYPrevious = 0;
-        aaZPrevious = 0;
-        aaXDiff = 0;
-        aaYDiff = 0;
-        aaZDiff = 0;
-        aaXTotal = 0;
-        aaYTotal = 0;
-        aaZTotal = 0;
+//        counter = 0;
+//        aaXPrevious = 0;
+//        aaYPrevious = 0;
+//        aaZPrevious = 0;
+//        aaXDiff = 0;
+//        aaYDiff = 0;
+//        aaZDiff = 0;
+//        aaXTotal = 0;
+//        aaYTotal = 0;
+//        aaZTotal = 0;
     }
         
         // blink LED to indicate activity
         blinkState = !blinkState;
         digitalWrite(LED_PIN, blinkState);
-    }
+    
 }
