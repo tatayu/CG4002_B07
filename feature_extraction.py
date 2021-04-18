@@ -72,10 +72,10 @@ def set_sliding_windows(df, overlap, window_size):
         return set_windows(df, window_size)
     window_count = math.ceil((len(df)-window_size+1)/(window_size-overlap))
     slides = np.array([])
-    # print("Set sliding windows:", window_count)
+    print("Set sliding windows:", window_count)
     for i in range(window_count):
-        # if i % 100 == 0:
-            # print("Sliding:", i)
+        if i % 100 == 0:
+            print("Sliding:", i)
         slides = np.append(slides, df[i*(window_size-overlap):i*(window_size-overlap)+window_size])
     slides = slides.reshape(
         window_count,

@@ -29,7 +29,7 @@ def svm(df, size, save):
         X, y, test_size=0.2, random_state=42, shuffle=True
     )
 
-    X_train, X_test, y_train, y_test = X_train[:size,:], X_test[:size,:], y_train[:size], y_test[:size]
+    # X_train, X_test, y_train, y_test = X_train[:size,:], X_test[:size,:], y_train[:size], y_test[:size]
 
     X_train = TimeSeriesScalerMinMax().fit_transform(X_train)
     X_train = X_train.reshape(X_train.shape[0], -1)
@@ -150,9 +150,9 @@ def knn(df, dim, save):
     # knn = KNNDTW()
     # knn = MLkNN(k=3)
     knn = KNeighborsClassifier(
-        n_neighbors=25, 
-        weights='distance', 
-        leaf_size=7
+        n_neighbors=35, 
+        # weights='distance', 
+        leaf_size=3
     )
     # knn = NearestCentroid()
     # knn = KNeighborsTimeSeriesClassifier(n_neighbors=2, metric="dtw")
@@ -167,7 +167,7 @@ def knn(df, dim, save):
     print(X_train.shape, y_train.shape)
     knn.fit(X_train, y_train)
     if save:
-        filename = './knn_model_8.pkl'
+        filename = './knn_model_8_3.pkl'
         joblib.dump(knn, filename)
     score = knn.score(X_test, y_test)
 
@@ -224,7 +224,7 @@ def random_forest(df, dim, save):
     ]
 
     # fit model
-    rfc = RandomForestClassifier(n_estimators=10000)
+    rfc = RandomForestClassifier(max_depth=1, random_state=0)
     # kf = KFold()
     # print(X_train.shape, X_test.shape)
     # print('Random Forest Validation Score:', np.mean(np.array(cross_val_score(rfc, X_train, y_train, cv=kf))))

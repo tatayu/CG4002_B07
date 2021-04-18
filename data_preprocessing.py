@@ -13,7 +13,8 @@ def _consolidate_data():
     print("Consolidating Data")
     train_df = None
     test_df = None
-    i = -1
+    file_name = 'new_data_collection'
+    entries = sorted(os.listdir(file_name))
     for j, entry in enumerate(entries):
         df = pd.read_csv(directory + '/' + entry) 
         df = initialize(df)
@@ -66,21 +67,21 @@ def consolidate_data():
         tagged_df = data_tagging(df, i)
         
         if train_df is None:
-            train_df = tagged_df[int(tagged_df.shape[0] * 4/30):int(tagged_df.shape[0] * 23/30)]
+            train_df = tagged_df[:int(tagged_df.shape[0] * 20/30)]
         else:
-            train_df = pd.concat([train_df, tagged_df[int(tagged_df.shape[0] * 4/30):int(tagged_df.shape[0] * 23/30)]])
+            train_df = pd.concat([train_df, tagged_df[:int(tagged_df.shape[0] * 20/30)]])
         if test_df is None:
-            test_df = tagged_df[int(tagged_df.shape[0] * 23/30):int(tagged_df.shape[0] * 27/30)]
+            test_df = tagged_df[int(tagged_df.shape[0] * 20/30):int(tagged_df.shape[0] * 23/30)]
         else:
-            test_df = pd.concat([test_df, tagged_df[int(tagged_df.shape[0] * 23/30):int(tagged_df.shape[0] * 27/30)]])
+            test_df = pd.concat([test_df, tagged_df[int(tagged_df.shape[0] * 20/30):int(tagged_df.shape[0] * 23/30)]])
     
     if 'dance' in train_df:
         del train_df['dance']
     if 'dance' in test_df:
         del test_df['dance']
 
-    # train_df = train_df.apply(pd.to_numeric).dropna()
-    # test_df = test_df.apply(pd.to_numeric).dropna()
+    train_df = train_df.apply(pd.to_numeric).dropna()
+    test_df = test_df.apply(pd.to_numeric).dropna()
 
     train_temp = train_df[['tag']]
     test_temp = test_df[['tag']]
@@ -92,9 +93,25 @@ def consolidate_data():
 
     x = train_df.values #returns a numpy array
     col = train_df.columns
-    # min_max_scaler = preprocessing.MinMaxScaler()
-    # x_scaled = min_max_scaler.fit_transform(x)
-    train_scaled = train_df.apply(lambda x: (x - min(x)) / (max(x) - min(x)))
+
+    print(train_df.tail(10))
+    # train_scaled = train_df.apply(lambda x: (x - min(x)) / (max(x) - min(x)))
+    min_max_scaler = preprocessing.MinMaxScaler()
+    train_scaled = min_max_scaler.fit_transform(x)
+    max_arr = [16377, 15638, 16383, 357, 363, 421]
+    min_arr = [-16382, -14090, -8726, -340, -337, -412]
+    
+    def normalize(df):
+        result = df.copy()
+        for i, feature_name in enumerate(df.columns):
+            max_value = max_arr[i]
+            min_value = min_arr[i]
+            result[feature_name] = (df[feature_name] - min_value) / (max_value - min_value)
+        return result
+    
+    train_scaled = normalize(train_df) 
+    print(train_df.max(), train_df.min())
+    print(train_scaled.tail(10))
     train_df = pd.DataFrame(train_scaled, columns=col)
     # robust_scaler = preprocessing.RobustScaler()
     # train_scaled = robust_scaler.fit_transform(x)

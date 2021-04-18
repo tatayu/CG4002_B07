@@ -78,7 +78,71 @@ class MLP(torch.nn.Module):
         return predicted
 
 def main():
-    train, test = consolidate_data()
+    def _consolidate_data_():
+        print("Consolidating Data")
+        train_df = None
+        test_df = None
+        i = -1
+        file_name = 'new_data_collection'
+        entries = sorted(os.listdir(file_name))
+        count = 0
+        for j, entry in enumerate(entries):
+            df = pd.read_csv(file_name + '/' + entry) 
+            # df = initialize(df)
+            print(entry.split('_'))
+            if entry.rsplit('_')[1] == 'hip.csv':
+                continue
+            i += 1
+            tagged_df = data_tagging(df, i)
+            tagged_df.columns = ['accel1', 'accel2','accel3','gyro1','gyro2','gyro3','ts','tag']
+            
+            if train_df is None:
+                train_df = tagged_df
+            else:
+                train_df = pd.concat([train_df, tagged_df])
+            if test_df is None:
+                test_df = tagged_df
+            else:
+                test_df = pd.concat([test_df, tagged_df])
+        del train_df['ts'], test_df['ts']
+
+        train_df = train_df.apply(pd.to_numeric).dropna()
+        test_df = test_df.apply(pd.to_numeric).dropna()
+
+        train_temp = train_df[['tag']]
+        test_temp = test_df[['tag']]
+        train_df = train_df.drop(['tag'], axis=1)
+        test_df = test_df.drop(['tag'], axis=1)
+
+        train_df = train_df.apply(pd.to_numeric).interpolate(method='polynomial', order=2)
+        test_df = test_df.apply(pd.to_numeric).interpolate(method='polynomial', order=2)
+
+        x = train_df.values #returns a numpy array
+        col = train_df.columns
+        # min_max_scaler = preprocessing.MinMaxScaler()
+        # x_scaled = min_max_scaler.fit_transform(x)
+        train_scaled = train_df.apply(lambda x: (x - min(x)) / (max(x) - min(x)))
+        train_df = pd.DataFrame(train_scaled, columns=col)
+        # robust_scaler = preprocessing.RobustScaler()
+        # train_scaled = robust_scaler.fit_transform(x)
+
+        train_df.reset_index(drop=True, inplace=True)
+        train_temp.reset_index(drop=True, inplace=True)
+        train_df = pd.concat([train_df,train_temp], axis=1)
+
+        x = test_df.values #returns a numpy array
+        col = test_df.columns
+        # min_max_scaler = preprocessing.MinMaxScaler()
+        # x_scaled = min_max_scaler.fit_transform(x)
+        test_scaled = test_df.apply(lambda x: (x - min(x)) / (max(x) - min(x)))
+        test_df = pd.DataFrame(test_scaled, columns=col)
+
+        test_df.reset_index(drop=True, inplace=True)
+        test_temp.reset_index(drop=True, inplace=True)
+        test_df = pd.concat([test_df,test_temp], axis=1)
+        return train_df, test_df
+    # train, test = consolidate_data()
+    # return
     # train, test = test_consolidate_data()
     if deployed:
         for i in range(testing_count):
@@ -113,16 +177,15 @@ def main():
             print("Time taken:", t1-t0)
 
     else:
-        # smoothed_dataset_train = smoothing(train, deployed)
-        print(train.shape)
-        train = feature_extract(train, window_size=window_size).reset_index(drop=True)
+        # train = smoothing(train, deployed)
+        # # print(train.shape)
+        # train = feature_extract(train, window_size=window_size).reset_index(drop=True)
+        # train.to_csv('out_16_train.csv', index=False)
 
-        smoothed_dataset_test = smoothing(test, deployed)
-        test = feature_extract(test, window_size=window_size).reset_index(drop=True) 
-
-        train.to_csv('out_12_train.csv', index=False)
-        test.to_csv('out_12_test.csv', index=False)
-        train = pd.read_csv('out_12_train.csv')
+        # test = smoothing(test, deployed)
+        # test = feature_extract(test, window_size=window_size).reset_index(drop=True) 
+        # test.to_csv('out_16_test.csv', index=False)
+        train = pd.read_csv('out_10_train.csv')
         # feature_importance = random_forest(train, dim=2, save=True)
 
         # svm_accuracy = svm(train, size=window_size, save=True)
