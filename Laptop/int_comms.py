@@ -108,7 +108,7 @@ def getTime():
 
 def timeParse(BEETLEMAC, unpackedData):
     milliTime = unpackedData[1]
-    return milliTime - beetleOffset[BEETLEMAC]
+    return milliTime + startTimestamp[BEETLEMAC] + beetleOffset[BEETLEMAC]
 
 def CRC(beetleCrc, receivedData, BEETLEMAC):
     crcCheck = CrcModbus()
@@ -159,7 +159,8 @@ class Delegate(btle.DefaultDelegate):
 
                     #Compare CRC calculated by PC and beetle
                     if(str(pcCrc) == str(beetleCrc)[1:len(str(beetleCrc))-2]):
-                        timestamp = getTime() - beetleOffset[self.BEETLEMAC]
+                        timestamp = timeParse(self.BEETLEMAC, unpackedData)
+                        #timestamp = getTime() - beetleOffset[self.BEETLEMAC]
                         #print(getTime() - beetleOffset[self.BEETLEMAC])
                         print(beetleName[self.BEETLEMAC], 'timestamp: ' ,timestamp)
                         dataBuffer[self.BEETLEMAC] = unpackedData[1:]
